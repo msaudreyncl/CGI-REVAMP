@@ -58,41 +58,21 @@ $devices = [
 ========================================================= -->
 
 <header class="site-header">
+    <a href="dashboard.php" class="nav-brand" aria-label="CGI Dashboard">
+        <img src="assets/cgi-logo.png" alt="CGI logo" class="brand-mark">
+        <div class="nav-brand-text">
+            <span class="nav-brand-name">CGI</span>
+            <span class="nav-brand-subtitle">Coffee Grade Identification</span>
+        </div>
+    </a>
 
-    <div class="brand">
-
-        <img
-            src="assets/cgi-logo.png"
-            alt="CGI logo"
-            class="brand-mark">
-
-    </div>
-
-
-    <nav aria-label="Main navigation">
-
-        <a href="history.php">
-            History
-        </a>
-
-        <a
-            href="dashboard.php"
-            class="active"
-            aria-current="page">
-
-            Dashboard
-
-        </a>
-
-        <a href="settings.php">
-            Settings
-        </a>
-
+    <nav class="main-nav" aria-label="Main navigation">
+        <a href="history.php">History</a>
+        <a href="dashboard.php" class="active" aria-current="page">Dashboard</a>
+        <a href="settings.php">Settings</a>
     </nav>
 
-
     <div class="user-menu">
-
         <button
             type="button"
             class="avatar"
@@ -101,42 +81,52 @@ $devices = [
             aria-expanded="false"
             aria-controls="user-dropdown"
             aria-label="Open user menu">
-
-            <img
-                src="assets/user-icon.png"
-                alt=""
-                class="avatar-icon">
-
+            <img src="assets/user-icon.png" alt="" class="avatar-icon">
         </button>
 
+        <div class="user-dropdown" id="user-dropdown" hidden>
+            <div class="dropdown-profile">
+                <div class="dropdown-avatar">
+                    <img src="assets/user-icon.png" alt="">
+                </div>
+                <div class="dropdown-profile-text">
+                    <strong>CGI Administrator</strong>
+                    <span>System account</span>
+                </div>
+            </div>
 
-        <div
-            class="user-dropdown"
-            id="user-dropdown"
-            hidden>
+            <div class="dropdown-divider"></div>
 
-            <button
-                type="button"
-                class="dropdown-item"
-                id="profile-btn">
-
-                User profile
-
+            <button type="button" class="dropdown-item" id="profile-btn">
+                <span class="dropdown-item-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z"/>
+                    </svg>
+                </span>
+                <span>User profile</span>
             </button>
 
-            <button
-                type="button"
-                class="dropdown-item"
-                id="logout-btn">
+            <a href="settings.php" class="dropdown-item dropdown-link">
+                <span class="dropdown-item-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M19.14 12.94a7.64 7.64 0 0 0 .05-.94 7.64 7.64 0 0 0-.05-.94l2.03-1.58-1.92-3.32-2.39.96a7.2 7.2 0 0 0-1.62-.94L14.88 3h-3.84l-.36 2.18c-.58.24-1.12.56-1.62.94l-2.39-.96-1.92 3.32 2.03 1.58a7.64 7.64 0 0 0-.05.94c0 .32.02.63.05.94l-2.03 1.58 1.92 3.32 2.39-.96c.5.38 1.04.7 1.62.94l.36 2.18h3.84l.36-2.18c.58-.24 1.12-.56 1.62-.94l2.39.96 1.92-3.32-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/>
+                    </svg>
+                </span>
+                <span>Settings</span>
+            </a>
 
-                Log out
+            <div class="dropdown-divider"></div>
 
+            <button type="button" class="dropdown-item dropdown-logout" id="logout-btn">
+                <span class="dropdown-item-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M10 17v2H5V5h5v2h2V3H3v18h9v-4h-2Zm9-5-4-4v3H9v2h6v3l4-4Z"/>
+                    </svg>
+                </span>
+                <span>Log out</span>
             </button>
-
         </div>
-
     </div>
-
 </header>
 
 

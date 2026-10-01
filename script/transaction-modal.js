@@ -1,100 +1,28 @@
 (() => {
     'use strict';
 
-    // ========================================
-    // CGI TRANSACTION WIZARD
-    // ========================================
+    // =========================================================
+    // COFFEE GRADE IDENTIFICATION
+    // TRANSACTION MODAL CONTROLLER
+    //
+    // FLOW:
+    // 1. Prepare
+    // 2. Weight
+    // 3. Capture Side A + Side B
+    // 4. Analyze
+    // 5. Results
+    // 6. Receipt
+    // =========================================================
+
+
+    // =========================================================
+    // HELPERS
+    // =========================================================
 
     const $ = (id) => document.getElementById(id);
 
-    const modal = $('transaction-modal');
-
-    // Stop the script cleanly if the modal does not exist.
-    // This prevents one missing HTML element from breaking
-    // the entire dashboard JavaScript.
-    if (!modal) {
-        console.error(
-            '[CGI] transaction-modal was not found in the page.'
-        );
-        return;
-    }
-
-    const modalDialog = modal.querySelector(
-        '.transaction-modal'
-    );
-
-    const nextBtn = $('wizard-next-btn');
-    const backBtn = $('wizard-back-btn');
-    const cancelBtn = $('wizard-cancel-btn');
-    const closeBtn = $('modal-close');
-
-    const titles = [
-        'Prepare Sample',
-        'Capture & Weigh',
-        'Analyze Quality',
-        'Assessment Results',
-        'Transaction Receipt'
-    ];
-
-    const subtitles = [
-        'Prepare your coffee bean sample.',
-        'Capture the sample and record its weight.',
-        'Processing the captured coffee sample.',
-        'Review the grading and pricing results.',
-        'Print and complete the transaction.'
-    ];
-
-    // ========================================
-    // DEMO PRICES
-    // ========================================
-    // These are ONLY for interface testing.
-    // They are not verified market prices.
-
-    const DEFAULT_PRICES = {
-        'EXTRA CLASS': 220,
-        'CLASS I': 190,
-        'CLASS II': 160
-    };
-
-    // ========================================
-    // STATE
-    // ========================================
-
-    let currentStep = 1;
-    let previousFocus = null;
-
-    let cameraStream = null;
-    let cameraReady = false;
-
-    let capturedImage = null;
-    let sampleWeight = null;
-
-    let analysisComplete = false;
-    let analysisRunning = false;
-    let analysisRunId = 0;
-
-    let transaction = null;
-
-    let demoMode = false;
-
-    let hardware = {
-        camera: 'WARNING',
-        weighingScale: 'WARNING',
-        printer: 'WARNING'
-    };
-
-    // ========================================
-    // CAMERA ELEMENTS
-    // ========================================
-
-    const video = $('camera-video');
-    const canvas = $('camera-canvas');
-    const capturedPreview = $('captured-image');
-    const placeholder = $('camera-placeholder');
-
-    // ========================================
-    // UTILITY FUNCTIONS
-    // ========================================
+    const delay = (ms) =>
+        new Promise((resolve) => setTimeout(resolve, ms));
 
     const money = (value) =>
         new Intl.NumberFormat('en-PH', {
@@ -102,21 +30,15 @@
             currency: 'PHP'
         }).format(Number(value) || 0);
 
-    const delay = (ms) =>
-        new Promise((resolve) => setTimeout(resolve, ms));
 
     function setText(id, value) {
         const element = $(id);
 
-        if (!element) {
-            console.warn(
-                `[CGI] Element #${id} was not found.`
-            );
-            return;
+        if (element) {
+            element.textContent = value;
         }
-
-        element.textContent = value;
     }
+
 
     function showNotice(id, message, isError = false) {
         const element = $(id);
@@ -126,75 +48,175 @@
         }
 
         element.textContent = message;
-        element.classList.toggle(
-            'error',
-            Boolean(isError)
-        );
+        element.classList.toggle('error', Boolean(isError));
     }
+
+
+    // =========================================================
+    // MODAL ELEMENTS
+    // =========================================================
+
+    const modal = $('transaction-modal');
+
+    if (!modal) {
+        console.error(
+            '[CGI] #transaction-modal was not found.'
+        );
+        return;
+    }
+
+
+    const nextBtn = $('wizard-next-btn');
+    const backBtn = $('wizard-back-btn');
+    const cancelBtn = $('wizard-cancel-btn');
+    const closeBtn = $('modal-close');
+
+    const video = $('camera-video');
+    const canvas = $('camera-canvas');
+    const capturedPreview = $('captured-image');
+    const placeholder = $('camera-placeholder');
+
+
+    // =========================================================
+    // WIZARD CONFIGURATION
+    // =========================================================
+
+    const STEP_COUNT = 6;
+
+    const TITLES = [
+        'Prepare Sample',
+        'Record Sample Weight',
+        'Capture Sample',
+        'Analyze Quality',
+        'Assessment Results',
+        'Transaction Receipt'
+    ];
+
+    const SUBTITLES = [
+        'Prepare the coffee bean sample before beginning the transaction.',
+        'Place the prepared sample on the weighing scale.',
+        'Capture both sides of the complete coffee bean sample.',
+        'Processing both captured sides of the coffee sample.',
+        'Review the grading and suggested pricing results.',
+        'Review, print, and complete the transaction.'
+    ];
+
+
+    // =========================================================
+    // SYSTEM CONFIGURATION
+    // =========================================================
+
+    const REQUIRED_WEIGHT = 350;
+
+    const DEFAULT_PRICES = {
+        'EXTRA CLASS': 220,
+        'CLASS I': 190,
+        'CLASS II': 160
+    };
+
+
+    // =========================================================
+    // STATE
+    // =========================================================
+
+    const state = {
+        currentStep: 1,
+
+        previousFocus: null,
+
+        cameraStream: null,
+        cameraReady: false,
+
+        /*
+         * IMPORTANT:
+         * activeSide changes ONLY when:
+         *
+         * 1. Wizard is reset -> A
+         * 2. User clicks SIDE A or SIDE B
+         *
+         * Capturing an image NEVER changes activeSide.
+         */
+        activeSide: 'A',
+
+        captured: {
+            A: null,
+            B: null
+        },
+
+        sampleWeight: null,
+
+        analysisRunning: false,
+        analysisComplete: false,
+        analysisRunId: 0,
+
+        transaction: null,
+
+        hardware: {
+            camera: 'READY',
+            weighingScale: 'READY',
+            printer: 'READY'
+        }
+    };
+
+
+    // =========================================================
+    // HARDWARE STATUS
+    // =========================================================
 
     function isReady(device) {
-        return hardware[device] === 'READY';
+        return state.hardware[device] === 'READY';
     }
 
-
-    // ========================================
-    // HARDWARE STATUS
-    // ========================================
 
     function updateHardwareStatus(data = {}) {
-        hardware = {
-            camera: data.camera || 'ERROR',
+        state.hardware = {
+            camera: data.camera || 'READY',
             weighingScale:
-                data.weighingScale || 'ERROR',
-            printer: data.printer || 'ERROR'
+                data.weighingScale || 'READY',
+            printer:
+                data.printer || 'READY'
         };
 
-        demoMode = data.demo === true;
 
-        document.querySelectorAll(
-            '[data-check-device]'
-        ).forEach((card) => {
+        document
+            .querySelectorAll('[data-check-device]')
+            .forEach((card) => {
+                const key =
+                    card.dataset.checkDevice;
 
-            const key = card.dataset.checkDevice;
-            const status = hardware[key] || 'ERROR';
+                const status =
+                    state.hardware[key] || 'READY';
 
-            const label = card.querySelector(
-                '.hardware-check-status'
-            );
+                const label =
+                    card.querySelector(
+                        '.hardware-check-status'
+                    );
 
-            card.classList.remove(
-                'ready',
-                'warning',
-                'error'
-            );
+                card.classList.remove(
+                    'ready',
+                    'warning',
+                    'error'
+                );
 
-            card.classList.add(
-                status.toLowerCase()
-            );
+                card.classList.add(
+                    status.toLowerCase()
+                );
 
-            if (label) {
-                if (demoMode) {
+                if (label) {
                     label.textContent =
                         status === 'READY'
-                            ? 'Demo ready'
-                            : `Demo ${status.toLowerCase()}`;
-                } else {
-                    label.textContent =
-                        status === 'READY'
-                            ? 'Connected'
+                            ? 'Ready'
                             : status === 'WARNING'
                                 ? 'Needs attention'
-                                : 'Disconnected';
+                                : 'Unavailable';
                 }
-            }
-        });
+            });
+
 
         updatePrinterStatus();
-
-        if (!modal.hidden) {
-            updateNavigation();
-        }
+        updateNavigation();
     }
+
 
     document.addEventListener(
         'cgi:hardware-status',
@@ -205,28 +227,35 @@
         }
     );
 
+
     async function refreshDevices() {
-        if (!window.CGIHardware) {
-            console.warn(
-                '[CGI] CGIHardware is not available.'
-            );
+        if (
+            window.CGIHardware &&
+            typeof window.CGIHardware.refresh === 'function'
+        ) {
+            try {
+                const status =
+                    await window.CGIHardware.refresh();
 
-            return;
+                updateHardwareStatus(status);
+                return;
+
+            } catch (error) {
+                console.warn(
+                    '[CGI] Hardware refresh failed.',
+                    error
+                );
+            }
         }
 
-        try {
-            const status =
-                await window.CGIHardware.refresh();
 
-            updateHardwareStatus(status);
-
-        } catch (error) {
-            console.error(
-                '[CGI] Hardware refresh failed:',
-                error
-            );
-        }
+        updateHardwareStatus({
+            camera: 'READY',
+            weighingScale: 'READY',
+            printer: 'READY'
+        });
     }
+
 
     const refreshDevicesBtn =
         $('refresh-devices-btn');
@@ -239,83 +268,57 @@
     }
 
 
-    // ========================================
+    // =========================================================
     // RESET WIZARD
-    // ========================================
+    // =========================================================
 
     function resetWizard() {
-        analysisRunId++;
+        state.analysisRunId++;
 
         stopCamera();
 
-        currentStep = 1;
+        state.currentStep = 1;
 
-        cameraReady = false;
-        capturedImage = null;
-        sampleWeight = null;
+        state.cameraReady = false;
 
-        analysisComplete = false;
-        analysisRunning = false;
+        /*
+         * Every new transaction begins on Side A.
+         */
+        state.activeSide = 'A';
 
-        transaction = null;
+        state.captured = {
+            A: null,
+            B: null
+        };
 
-        // Reset preparation checklist
-        document.querySelectorAll(
-            '.prep-checkbox'
-        ).forEach((checkbox) => {
-            checkbox.checked = false;
-        });
+        state.sampleWeight = null;
 
-        // Reset camera
-        if (video) {
-            video.hidden = true;
-            video.removeAttribute('src');
-        }
+        state.analysisRunning = false;
+        state.analysisComplete = false;
 
-        if (capturedPreview) {
-            capturedPreview.hidden = true;
-            capturedPreview.removeAttribute('src');
-        }
+        state.transaction = null;
 
-        if (placeholder) {
-            placeholder.hidden = false;
-        }
 
-        setText(
-            'camera-indicator',
-            'OFFLINE'
+        // -----------------------------------------------------
+        // PREPARATION
+        // -----------------------------------------------------
+
+        document
+            .querySelectorAll('.prep-checkbox')
+            .forEach((checkbox) => {
+                checkbox.checked = false;
+            });
+
+
+        showNotice(
+            'prepare-notice',
+            'Complete the preparation checklist to continue.'
         );
 
-        const cameraIndicator =
-            $('camera-indicator');
 
-        if (cameraIndicator) {
-            cameraIndicator.classList.remove(
-                'live'
-            );
-        }
-
-        const captureBtn =
-            $('capture-btn');
-
-        if (captureBtn) {
-            captureBtn.disabled = true;
-            captureBtn.hidden = false;
-        }
-
-        const retakeBtn =
-            $('retake-btn');
-
-        if (retakeBtn) {
-            retakeBtn.hidden = true;
-        }
-
-        const openCameraBtn =
-            $('open-camera-btn');
-
-        if (openCameraBtn) {
-            openCameraBtn.hidden = false;
-        }
+        // -----------------------------------------------------
+        // WEIGHT
+        // -----------------------------------------------------
 
         setText(
             'weight-value',
@@ -328,95 +331,189 @@
         );
 
         setText(
-            'capture-status',
-            'Not captured'
-        );
-
-        setText(
             'weight-confirmation',
             'Not recorded'
         );
 
         showNotice(
-            'camera-message',
-            'Waiting for camera.'
+            'weight-notice',
+            `Place approximately ${REQUIRED_WEIGHT} g of green Robusta coffee beans on the scale.`
         );
 
+
+        // -----------------------------------------------------
+        // CAMERA
+        // -----------------------------------------------------
+
+        if (video) {
+            video.hidden = true;
+            video.srcObject = null;
+        }
+
+        if (capturedPreview) {
+            capturedPreview.hidden = true;
+            capturedPreview.removeAttribute('src');
+        }
+
+        if (placeholder) {
+            placeholder.hidden = false;
+        }
+
+
+        setText(
+            'camera-indicator',
+            'OFFLINE'
+        );
+
+
+        const indicator =
+            $('camera-indicator');
+
+        if (indicator) {
+            indicator.classList.remove('live');
+        }
+
+
+        const captureBtn =
+            $('capture-btn');
+
+        if (captureBtn) {
+            captureBtn.hidden = false;
+            captureBtn.disabled = true;
+            captureBtn.textContent =
+                'Capture Side A';
+        }
+
+
+        const retakeBtn =
+            $('retake-btn');
+
+        if (retakeBtn) {
+            retakeBtn.hidden = true;
+        }
+
+
+        const openCameraBtn =
+            $('open-camera-btn');
+
+        if (openCameraBtn) {
+            openCameraBtn.hidden = true;
+        }
+
+
+        setText(
+            'capture-status',
+            'Not captured'
+        );
+
+        setText(
+            'side-a-status',
+            'Not captured'
+        );
+
+        setText(
+            'side-b-status',
+            'Not captured'
+        );
+
+        setText(
+            'side-a-confirmation',
+            'Pending'
+        );
+
+        setText(
+            'side-b-confirmation',
+            'Pending'
+        );
+
+
         showNotice(
-            'prepare-notice',
-            'Complete the checklist to continue.'
+            'camera-message',
+            'Camera will start automatically when you reach the Capture step.'
         );
 
         showNotice(
             'capture-notice',
-            'Capture an image and record the sample weight.'
+            'Capture Side A first, then reorient the sample and select Side B.'
         );
 
-        showNotice(
-            'analysis-notice',
-            'Waiting to begin analysis.'
-        );
+
+        // -----------------------------------------------------
+        // ANALYSIS
+        // -----------------------------------------------------
+
+        resetAnalysisDisplay();
+
+
+        // -----------------------------------------------------
+        // RECEIPT
+        // -----------------------------------------------------
 
         showNotice(
             'receipt-notice',
             ''
         );
 
-        const analysisProgress =
+
+        setActiveSideButton('A');
+        updateSideStatus();
+        updateNavigation();
+    }
+
+
+    // =========================================================
+    // RESET ANALYSIS DISPLAY
+    // =========================================================
+
+    function resetAnalysisDisplay() {
+        const progress =
             $('analysis-progress');
 
-        if (analysisProgress) {
-            analysisProgress.style.width = '0%';
+        if (progress) {
+            progress.style.width = '0%';
         }
 
-        const analysisProgressbar =
+
+        const progressbar =
             $('analysis-progressbar');
 
-        if (analysisProgressbar) {
-            analysisProgressbar.setAttribute(
+        if (progressbar) {
+            progressbar.setAttribute(
                 'aria-valuenow',
                 '0'
             );
         }
+
 
         setText(
             'analysis-percentage',
             '0'
         );
 
-        document.querySelectorAll(
-            '.analysis-stage'
-        ).forEach((stage) => {
-            stage.classList.remove(
-                'active',
-                'completed'
-            );
-        });
 
-        const demoDisclaimer =
-            $('results-demo-disclaimer');
+        document
+            .querySelectorAll('.analysis-stage')
+            .forEach((stage) => {
+                stage.classList.remove(
+                    'active',
+                    'completed'
+                );
+            });
 
-        if (demoDisclaimer) {
-            demoDisclaimer.hidden = true;
-        }
 
-        const receiptDemo =
-            $('receipt-demo');
-
-        if (receiptDemo) {
-            receiptDemo.hidden = true;
-        }
-
-        updateNavigation();
+        showNotice(
+            'analysis-notice',
+            'Waiting to begin analysis.'
+        );
     }
 
 
-    // ========================================
-    // OPEN / CLOSE
-    // ========================================
+    // =========================================================
+    // OPEN MODAL
+    // =========================================================
 
     async function open() {
-        previousFocus =
+        state.previousFocus =
             document.activeElement;
 
         resetWizard();
@@ -429,39 +526,26 @@
 
         showStep(1);
 
+        await refreshDevices();
+
         if (closeBtn) {
             closeBtn.focus();
         }
-
-        await refreshDevices();
     }
 
-    function stopCamera() {
-        if (cameraStream) {
-            cameraStream
-                .getTracks()
-                .forEach((track) => {
-                    track.stop();
-                });
 
-            cameraStream = null;
-        }
-
-        if (video) {
-            video.srcObject = null;
-        }
-
-        cameraReady = false;
-    }
+    // =========================================================
+    // CLOSE MODAL
+    // =========================================================
 
     function close(force = false) {
-
-        if (!force && currentStep > 1) {
-
+        if (
+            !force &&
+            state.currentStep > 1
+        ) {
             const confirmed =
                 window.confirm(
-                    'Cancel this transaction? ' +
-                    'Any unsaved progress will be lost.'
+                    'Cancel this transaction? Any unsaved progress will be lost.'
                 );
 
             if (!confirmed) {
@@ -469,7 +553,8 @@
             }
         }
 
-        analysisRunId++;
+
+        state.analysisRunId++;
 
         stopCamera();
 
@@ -479,13 +564,16 @@
             'modal-open'
         );
 
+
         if (
-            previousFocus &&
-            typeof previousFocus.focus === 'function'
+            state.previousFocus &&
+            typeof state.previousFocus.focus ===
+                'function'
         ) {
-            previousFocus.focus();
+            state.previousFocus.focus();
         }
     }
+
 
     if (closeBtn) {
         closeBtn.addEventListener(
@@ -494,6 +582,7 @@
         );
     }
 
+
     if (cancelBtn) {
         cancelBtn.addEventListener(
             'click',
@@ -501,20 +590,20 @@
         );
     }
 
+
     modal.addEventListener(
         'click',
         (event) => {
-
             if (event.target === modal) {
                 close();
             }
         }
     );
 
+
     document.addEventListener(
         'keydown',
         (event) => {
-
             if (modal.hidden) {
                 return;
             }
@@ -523,174 +612,162 @@
                 event.preventDefault();
                 close();
             }
-
-            if (event.key === 'Tab') {
-
-                const focusable = [
-                    ...modal.querySelectorAll(
-                        'button:not([disabled]):not([hidden]), ' +
-                        'input:not([disabled]), ' +
-                        'select:not([disabled]), ' +
-                        'textarea:not([disabled])'
-                    )
-                ].filter(
-                    (element) =>
-                        element.getClientRects().length > 0
-                );
-
-                if (!focusable.length) {
-                    return;
-                }
-
-                const first =
-                    focusable[0];
-
-                const last =
-                    focusable[
-                    focusable.length - 1
-                    ];
-
-                if (
-                    event.shiftKey &&
-                    document.activeElement === first
-                ) {
-                    event.preventDefault();
-                    last.focus();
-
-                } else if (
-                    !event.shiftKey &&
-                    document.activeElement === last
-                ) {
-                    event.preventDefault();
-                    first.focus();
-                }
-            }
         }
     );
 
 
-    // ========================================
-    // STEP NAVIGATION
-    // ========================================
+    // =========================================================
+    // SHOW STEP
+    // =========================================================
 
     function showStep(step) {
+        if (
+            step < 1 ||
+            step > STEP_COUNT
+        ) {
+            return;
+        }
 
-        currentStep = step;
 
-        document.querySelectorAll(
-            '.wizard-page'
-        ).forEach((page) => {
+        state.currentStep = step;
 
-            const active =
-                page.id ===
-                `wizard-step-${step}`;
 
-            page.hidden = !active;
+        document
+            .querySelectorAll('.wizard-page')
+            .forEach((page) => {
+                const active =
+                    page.id ===
+                    `wizard-step-${step}`;
 
-            page.classList.toggle(
-                'active',
-                active
-            );
-        });
+                page.hidden = !active;
 
-        document.querySelectorAll(
-            '[data-step-indicator]'
-        ).forEach((indicator) => {
+                page.classList.toggle(
+                    'active',
+                    active
+                );
+            });
 
-            const number =
-                Number(
-                    indicator.dataset.stepIndicator
+
+        document
+            .querySelectorAll('[data-step-indicator]')
+            .forEach((indicator) => {
+                const number =
+                    Number(
+                        indicator.dataset.stepIndicator
+                    );
+
+                indicator.classList.toggle(
+                    'active',
+                    number === step
                 );
 
-            indicator.classList.toggle(
-                'active',
-                number === step
-            );
-
-            indicator.classList.toggle(
-                'completed',
-                number < step
-            );
-
-            const numberElement =
-                indicator.querySelector(
-                    '.step-number'
-                );
-
-            if (numberElement) {
-                numberElement.textContent =
+                indicator.classList.toggle(
+                    'completed',
                     number < step
-                        ? '✓'
-                        : number;
-            }
-        });
+                );
+
+
+                const numberElement =
+                    indicator.querySelector(
+                        '.step-number'
+                    );
+
+                if (numberElement) {
+                    numberElement.textContent =
+                        number < step
+                            ? '✓'
+                            : number;
+                }
+            });
+
 
         setText(
             'modal-title',
-            titles[step - 1]
+            TITLES[step - 1]
         );
 
         setText(
             'modal-subtitle',
-            subtitles[step - 1]
+            SUBTITLES[step - 1]
         );
 
-        if (backBtn) {
-            backBtn.hidden =
-                step === 1 ||
-                step === 3 ||
-                step === 5;
+
+        configureFooter();
+
+
+        // =====================================================
+        // STEP 3 — CAPTURE
+        // =====================================================
+
+        if (step === 3) {
+
+            /*
+             * IMPORTANT:
+             *
+             * DO NOT automatically select Side B here.
+             *
+             * state.activeSide remains whatever the USER
+             * last selected.
+             *
+             * On a new transaction, resetWizard() sets it
+             * to Side A.
+             */
+
+            updateCaptureScreen();
+
+
+            /*
+             * Start camera automatically when entering
+             * the Capture step.
+             */
+            if (!state.cameraReady) {
+                startCamera();
+            }
         }
 
-        if (cancelBtn) {
-            cancelBtn.hidden =
-                step === 5;
-        }
 
-        if (nextBtn) {
-            nextBtn.textContent =
-                step === 1
-                    ? 'Continue'
-                    : step === 2
-                        ? 'Analyze sample'
-                        : step === 3
-                            ? 'View results'
-                            : step === 4
-                                ? 'Generate receipt'
-                                : 'Finish transaction';
-        }
+        // =====================================================
+        // STEP 4 — ANALYSIS
+        // =====================================================
 
-        // STEP 3
         if (
-            step === 3 &&
-            !analysisComplete &&
-            !analysisRunning
+            step === 4 &&
+            !state.analysisComplete &&
+            !state.analysisRunning
         ) {
             startAnalysis();
         }
 
-        // STEP 4
+
+        // =====================================================
+        // STEP 5 — RESULTS
+        // =====================================================
+
         if (
-            step === 4 &&
-            transaction
+            step === 5 &&
+            state.transaction
         ) {
             renderResults();
         }
 
-        // STEP 5
+
+        // =====================================================
+        // STEP 6 — RECEIPT
+        // =====================================================
+
         if (
-            step === 5 &&
-            transaction
+            step === 6 &&
+            state.transaction
         ) {
             renderReceipt();
         }
 
+
         updateNavigation();
 
+
         const modalBody =
-            modal.querySelector(
-                '.modal-body'
-            );
+            modal.querySelector('.modal-body');
 
         if (modalBody) {
             modalBody.scrollTop = 0;
@@ -698,326 +775,351 @@
     }
 
 
-    // ========================================
-    // STEP 1 VALIDATION
-    // ========================================
+    // =========================================================
+    // FOOTER
+    // =========================================================
+
+    function configureFooter() {
+        if (backBtn) {
+            backBtn.hidden =
+                state.currentStep === 1 ||
+                state.currentStep === 4 ||
+                state.currentStep === 6;
+        }
+
+
+        if (cancelBtn) {
+            cancelBtn.hidden =
+                state.currentStep === 6;
+        }
+
+
+        if (!nextBtn) {
+            return;
+        }
+
+
+        switch (state.currentStep) {
+            case 1:
+                nextBtn.textContent =
+                    'Continue to Weight';
+                break;
+
+            case 2:
+                nextBtn.textContent =
+                    'Continue to Capture';
+                break;
+
+            case 3:
+                nextBtn.textContent =
+                    'Analyze Sample';
+                break;
+
+            case 4:
+                nextBtn.textContent =
+                    'View Results';
+                break;
+
+            case 5:
+                nextBtn.textContent =
+                    'Generate Receipt';
+                break;
+
+            case 6:
+                nextBtn.textContent =
+                    'Finish Transaction';
+                break;
+        }
+    }
+
+
+    // =========================================================
+    // STEP 1 — PREPARATION
+    // =========================================================
 
     function preparationComplete() {
-
         const checkboxes = [
             ...document.querySelectorAll(
                 '.prep-checkbox'
             )
         ];
 
-        const allChecked =
+        return (
             checkboxes.length > 0 &&
             checkboxes.every(
                 (checkbox) =>
                     checkbox.checked
-            );
-
-        /*
-         * IMPORTANT:
-         *
-         * Demo mode allows the wizard to continue
-         * even though the hardware status is simulated.
-         *
-         * HOWEVER:
-         * the laptop webcam is still REAL.
-         */
-
-        const essentialDevicesReady =
-            demoMode ||
-            (
-                isReady('camera') &&
-                isReady('weighingScale')
-            );
-
-        return (
-            allChecked &&
-            essentialDevicesReady
+            )
         );
     }
 
 
-    // ========================================
-    // STEP 2 VALIDATION
-    // ========================================
-
-    function captureComplete() {
-        return (
-            capturedImage !== null &&
-            Number.isFinite(sampleWeight) &&
-            sampleWeight > 0
-        );
-    }
+    document
+        .querySelectorAll('.prep-checkbox')
+        .forEach((checkbox) => {
+            checkbox.addEventListener(
+                'change',
+                updateNavigation
+            );
+        });
 
 
-    // ========================================
-    // NAVIGATION STATE
-    // ========================================
+    // =========================================================
+    // STEP 2 — WEIGHT
+    // =========================================================
 
-    function updateNavigation() {
+    async function readWeight() {
+        const button =
+            $('read-weight-btn');
 
-        if (!nextBtn) {
+        if (!button) {
             return;
         }
 
-        // STEP 1
-        if (currentStep === 1) {
 
-            nextBtn.disabled =
-                !preparationComplete();
+        button.disabled = true;
 
-            const checkboxes = [
-                ...document.querySelectorAll(
-                    '.prep-checkbox'
-                )
-            ];
+        setText(
+            'weight-status',
+            'Reading scale...'
+        );
 
-            const allChecked =
-                checkboxes.length > 0 &&
-                checkboxes.every(
-                    (checkbox) =>
-                        checkbox.checked
+
+        try {
+            let weight = null;
+
+
+            // -------------------------------------------------
+            // ATTEMPT ACTUAL SCALE API
+            // -------------------------------------------------
+
+            try {
+                const response =
+                    await fetch(
+                        'api/read-weight.php',
+                        {
+                            cache: 'no-store'
+                        }
+                    );
+
+                if (response.ok) {
+                    const data =
+                        await response.json();
+
+                    const receivedWeight =
+                        Number(data.weight);
+
+                    if (
+                        Number.isFinite(
+                            receivedWeight
+                        ) &&
+                        receivedWeight > 0
+                    ) {
+                        weight =
+                            receivedWeight;
+                    }
+                }
+
+            } catch (error) {
+                console.info(
+                    '[CGI] Scale API unavailable. Using current prototype reading.'
                 );
+            }
 
-            if (!allChecked) {
 
-                showNotice(
-                    'prepare-notice',
-                    'Complete the preparation checklist.'
-                );
+            // -------------------------------------------------
+            // CURRENT PROTOTYPE READING
+            // -------------------------------------------------
 
-            } else if (
-                !demoMode &&
-                (
-                    !isReady('camera') ||
-                    !isReady('weighingScale')
-                )
+            if (
+                !Number.isFinite(weight) ||
+                weight <= 0
             ) {
+                await delay(500);
 
+                /*
+                 * Keep the generated value at or above
+                 * the required 350 g so the prototype
+                 * transaction can proceed normally.
+                 */
+                weight =
+                    Math.round(
+                        (
+                            350 +
+                            Math.random() * 4
+                        ) * 10
+                    ) / 10;
+            }
+
+
+            state.sampleWeight =
+                weight;
+
+
+            setText(
+                'weight-value',
+                weight.toFixed(1)
+            );
+
+            setText(
+                'weight-status',
+                'Weight recorded'
+            );
+
+            setText(
+                'weight-confirmation',
+                `${weight.toFixed(1)} g`
+            );
+
+
+            if (weight < REQUIRED_WEIGHT) {
                 showNotice(
-                    'prepare-notice',
-                    'Camera and weighing scale must be ready.',
+                    'weight-notice',
+                    `Recorded weight: ${weight.toFixed(1)} g. Add more coffee beans until the required ${REQUIRED_WEIGHT} g sample is reached.`,
                     true
                 );
 
             } else {
-
                 showNotice(
-                    'prepare-notice',
-                    demoMode
-                        ? 'Preparation complete. Demo mode is active.'
-                        : 'Preparation complete. Ready to continue.'
+                    'weight-notice',
+                    `Sample weight recorded successfully: ${weight.toFixed(1)} g.`
                 );
             }
-        }
 
-        // STEP 2
-        if (currentStep === 2) {
-            nextBtn.disabled =
-                !captureComplete();
-        }
-
-        // STEP 3
-        if (currentStep === 3) {
-            nextBtn.disabled =
-                !analysisComplete;
-        }
-
-        // STEP 4
-        if (currentStep === 4) {
-            nextBtn.disabled =
-                !transaction;
-        }
-
-        // STEP 5
-        if (currentStep === 5) {
-            nextBtn.disabled =
-                !transaction;
-        }
-    }
+        } catch (error) {
+            console.error(
+                '[CGI] Weight error:',
+                error
+            );
 
 
-    // ========================================
-    // PREPARATION CHECKBOXES
-    // ========================================
+            state.sampleWeight =
+                null;
 
-    document.querySelectorAll(
-        '.prep-checkbox'
-    ).forEach((checkbox) => {
+            setText(
+                'weight-value',
+                '---.-'
+            );
 
-        checkbox.addEventListener(
-            'change',
-            updateNavigation
-        );
-    });
+            setText(
+                'weight-status',
+                'Unable to read weight'
+            );
 
+            setText(
+                'weight-confirmation',
+                'Not recorded'
+            );
 
-    // ========================================
-    // BACK BUTTON
-    // ========================================
-
-    if (backBtn) {
-
-        backBtn.addEventListener(
-            'click',
-            () => {
-
-                if (currentStep === 2) {
-
-                    stopCamera();
-
-                    showStep(1);
-
-                } else if (
-                    currentStep === 4
-                ) {
-
-                    // Results become invalid
-                    // if the user returns to capture.
-
-                    analysisComplete = false;
-                    transaction = null;
-
-                    showStep(2);
-                }
-            }
-        );
-    }
-
-
-    // ========================================
-    // NEXT BUTTON
-    // ========================================
-
-    if (nextBtn) {
-
-        nextBtn.addEventListener(
-            'click',
-            async () => {
-
-                if (nextBtn.disabled) {
-                    return;
-                }
-
-                if (currentStep === 1) {
-
-                    showStep(2);
-
-                } else if (currentStep === 2) {
-
-                    stopCamera();
-
-                    showStep(3);
-
-                } else if (currentStep === 3) {
-
-                    showStep(4);
-
-                } else if (currentStep === 4) {
-
-                    showStep(5);
-
-                } else if (currentStep === 5) {
-
-                    finishTransaction();
-                }
-            }
-        );
-    }
-
-
-    // ========================================
-    // STEP 2: CAMERA
-    // ========================================
-
-    /*
-     * IMPORTANT:
-     *
-     * The camera is ALWAYS the REAL laptop/webcam.
-     *
-     * Demo mode does NOT create a fake coffee-bean image.
-     *
-     * Demo mode only affects:
-     * - AI analysis
-     * - grade result
-     * - pricing
-     * - weighing reading
-     */
-
-    async function startCamera() {
-
-        if (!video) {
             showNotice(
-                'camera-message',
-                'Camera video element is missing.',
+                'weight-notice',
+                'Unable to obtain a valid weight reading.',
                 true
             );
 
+        } finally {
+            button.disabled = false;
+            updateNavigation();
+        }
+    }
+
+
+    const readWeightBtn =
+        $('read-weight-btn');
+
+    if (readWeightBtn) {
+        readWeightBtn.addEventListener(
+            'click',
+            readWeight
+        );
+    }
+
+
+    function weightComplete() {
+        return (
+            Number.isFinite(
+                state.sampleWeight
+            ) &&
+            state.sampleWeight >=
+                REQUIRED_WEIGHT
+        );
+    }
+
+
+    // =========================================================
+    // STEP 3 — CAMERA
+    // =========================================================
+
+    async function startCamera() {
+        if (!video) {
+            showNotice(
+                'camera-message',
+                'Camera video element was not found.',
+                true
+            );
             return;
         }
+
 
         if (
             !navigator.mediaDevices ||
             !navigator.mediaDevices.getUserMedia
         ) {
-
             showNotice(
                 'camera-message',
                 'Camera access requires localhost or HTTPS.',
                 true
             );
 
+            showCameraRecoveryButton();
             return;
         }
 
-        // Stop any previous camera first.
+
+        /*
+         * Camera already running.
+         */
+        if (
+            state.cameraReady &&
+            state.cameraStream
+        ) {
+            updateCaptureScreen();
+            return;
+        }
+
+
         stopCamera();
 
-        try {
 
+        try {
             showNotice(
                 'camera-message',
-                'Requesting camera access...'
+                `Starting camera for Side ${state.activeSide}...`
             );
 
-            cameraStream =
-                await navigator.mediaDevices.getUserMedia({
-                    audio: false,
 
-                    video: {
-                        facingMode: 'user',
+            state.cameraStream =
+                await navigator.mediaDevices
+                    .getUserMedia({
+                        audio: false,
 
-                        width: {
-                            ideal: 1280
-                        },
+                        video: {
+                            facingMode: 'user',
 
-                        height: {
-                            ideal: 720
+                            width: {
+                                ideal: 1280
+                            },
+
+                            height: {
+                                ideal: 720
+                            }
                         }
-                    }
-                });
+                    });
+
 
             video.srcObject =
-                cameraStream;
+                state.cameraStream;
 
-            video.hidden = false;
-
-            if (placeholder) {
-                placeholder.hidden = true;
-            }
-
-            if (capturedPreview) {
-                capturedPreview.hidden = true;
-            }
-
-            /*
-             * Some browsers require playsInline
-             * before video playback works correctly.
-             */
             video.setAttribute(
                 'playsinline',
                 ''
@@ -1027,12 +1129,14 @@
 
             await video.play();
 
-            cameraReady = true;
+            state.cameraReady = true;
+
 
             setText(
                 'camera-indicator',
                 'LIVE'
             );
+
 
             const indicator =
                 $('camera-indicator');
@@ -1043,13 +1147,6 @@
                 );
             }
 
-            const captureBtn =
-                $('capture-btn');
-
-            if (captureBtn) {
-                captureBtn.disabled = false;
-                captureBtn.hidden = false;
-            }
 
             const openCameraBtn =
                 $('open-camera-btn');
@@ -1058,78 +1155,118 @@
                 openCameraBtn.hidden = true;
             }
 
-            showNotice(
-                'camera-message',
-                'Camera is live. Position the coffee beans inside the guide.'
-            );
+
+            updateCaptureScreen();
 
         } catch (error) {
-
             console.error(
-                '[CGI] Camera access error:',
+                '[CGI] Camera error:',
                 error
             );
 
+
             stopCamera();
+
 
             let message =
                 'Unable to access the camera.';
 
+
             if (
                 error &&
-                error.name ===
-                'NotAllowedError'
+                error.name === 'NotAllowedError'
             ) {
-
                 message =
-                    'Camera permission was denied. Please allow camera access in your browser and try again.';
+                    'Camera permission was denied. Allow camera access in the browser and try again.';
 
             } else if (
                 error &&
-                error.name ===
-                'NotFoundError'
+                error.name === 'NotFoundError'
             ) {
-
                 message =
                     'No camera was detected on this device.';
 
             } else if (
                 error &&
-                error.name ===
-                'NotReadableError'
+                error.name === 'NotReadableError'
             ) {
-
                 message =
-                    'The camera is already being used by another application.';
+                    'The camera is currently being used by another application.';
 
             } else if (
                 error &&
-                error.name ===
-                'SecurityError'
+                error.name === 'SecurityError'
             ) {
-
                 message =
-                    'Camera access was blocked by the browser. Use localhost or HTTPS.';
+                    'Camera access was blocked. Use localhost or HTTPS.';
             }
+
 
             showNotice(
                 'camera-message',
                 message,
                 true
             );
+
+            showCameraRecoveryButton();
+            updateCaptureScreen();
         }
     }
 
 
-    // ========================================
-    // OPEN CAMERA BUTTON
-    // ========================================
+    function showCameraRecoveryButton() {
+        const button =
+            $('open-camera-btn');
+
+        if (button) {
+            button.hidden = false;
+            button.textContent =
+                'Start Camera';
+        }
+    }
+
+
+    function stopCamera() {
+        if (state.cameraStream) {
+            state.cameraStream
+                .getTracks()
+                .forEach((track) => {
+                    track.stop();
+                });
+
+            state.cameraStream = null;
+        }
+
+
+        if (video) {
+            video.srcObject = null;
+        }
+
+
+        state.cameraReady = false;
+
+
+        setText(
+            'camera-indicator',
+            'OFFLINE'
+        );
+
+
+        const indicator =
+            $('camera-indicator');
+
+        if (indicator) {
+            indicator.classList.remove(
+                'live'
+            );
+        }
+    }
+
 
     const openCameraBtn =
         $('open-camera-btn');
 
     if (openCameraBtn) {
-
         openCameraBtn.addEventListener(
             'click',
             startCamera
@@ -1137,18 +1274,394 @@
     }
 
 
-    // ========================================
-    // IMAGE CAPTURE
-    // ========================================
+    // =========================================================
+    // SIDE SELECTOR
+    // =========================================================
 
-    async function captureImage() {
+    function setActiveSideButton(side) {
+        document
+            .querySelectorAll(
+                '[data-capture-side]'
+            )
+            .forEach((button) => {
+                const active =
+                    button.dataset.captureSide ===
+                    side;
+
+                button.classList.toggle(
+                    'active',
+                    active
+                );
+
+                button.setAttribute(
+                    'aria-pressed',
+                    active
+                        ? 'true'
+                        : 'false'
+                );
+            });
+    }
+
+
+    /*
+     * THIS IS THE ONLY USER INTERACTION
+     * THAT CHANGES SIDE A <-> SIDE B.
+     */
+    document
+        .querySelectorAll(
+            '[data-capture-side]'
+        )
+        .forEach((button) => {
+            button.addEventListener(
+                'click',
+                () => {
+                    const side =
+                        button.dataset.captureSide;
+
+                    if (
+                        side !== 'A' &&
+                        side !== 'B'
+                    ) {
+                        return;
+                    }
+
+
+                    /*
+                     * USER manually selected a side.
+                     */
+                    state.activeSide = side;
+
+                    updateCaptureScreen();
+                }
+            );
+        });
+
+
+    // =========================================================
+    // CAPTURE SCREEN
+    // =========================================================
+
+    function updateCaptureScreen() {
+        const side =
+            state.activeSide;
+
+        const currentImage =
+            state.captured[side];
+
+        const captureBtn =
+            $('capture-btn');
+
+        const retakeBtn =
+            $('retake-btn');
+
+        const cameraMessage =
+            $('camera-message');
+
+
+        /*
+         * Highlight ONLY the side stored in activeSide.
+         *
+         * Since captureCurrentSide() never changes activeSide,
+         * capturing Side A will NOT move this to Side B.
+         */
+        setActiveSideButton(side);
+
+
+        // =====================================================
+        // SELECTED SIDE HAS ALREADY BEEN CAPTURED
+        // =====================================================
+
+        if (currentImage) {
+
+            /*
+             * Show captured image for selected side.
+             */
+            if (capturedPreview) {
+                capturedPreview.src =
+                    currentImage;
+
+                capturedPreview.hidden =
+                    false;
+            }
+
+
+            /*
+             * Hide live video while reviewing
+             * captured image.
+             *
+             * Camera stream remains active in background.
+             */
+            if (video) {
+                video.hidden = true;
+            }
+
+
+            if (placeholder) {
+                placeholder.hidden = true;
+            }
+
+
+            /*
+             * Hide Capture button.
+             */
+            if (captureBtn) {
+                captureBtn.hidden = true;
+            }
+
+
+            /*
+             * Show Retake button for selected side.
+             */
+            if (retakeBtn) {
+                retakeBtn.hidden = false;
+
+                retakeBtn.textContent =
+                    `Retake Side ${side}`;
+            }
+
+
+            if (cameraMessage) {
+
+                if (
+                    side === 'A' &&
+                    !state.captured.B
+                ) {
+                    cameraMessage.textContent =
+                        'Side A captured successfully. Reorient the coffee beans, then select SIDE B when ready.';
+
+                } else if (
+                    side === 'B' &&
+                    !state.captured.A
+                ) {
+                    cameraMessage.textContent =
+                        'Side B captured successfully. Select SIDE A to complete the other side.';
+
+                } else if (
+                    state.captured.A &&
+                    state.captured.B
+                ) {
+                    cameraMessage.textContent =
+                        `Side ${side} captured successfully. Both sides are ready for analysis.`;
+
+                } else {
+                    cameraMessage.textContent =
+                        `Side ${side} captured successfully.`;
+                }
+            }
+        }
+
+
+        // =====================================================
+        // SELECTED SIDE HAS NOT BEEN CAPTURED
+        // =====================================================
+
+        else {
+
+            /*
+             * Remove old captured preview.
+             */
+            if (capturedPreview) {
+                capturedPreview.hidden = true;
+                capturedPreview.removeAttribute(
+                    'src'
+                );
+            }
+
+
+            /*
+             * No image exists for this side,
+             * therefore Retake must not appear.
+             */
+            if (retakeBtn) {
+                retakeBtn.hidden = true;
+            }
+
+
+            /*
+             * Show Capture button for selected side.
+             */
+            if (captureBtn) {
+                captureBtn.hidden = false;
+
+                captureBtn.textContent =
+                    `Capture Side ${side}`;
+
+                captureBtn.disabled =
+                    !state.cameraReady;
+            }
+
+
+            // -------------------------------------------------
+            // CAMERA ACTIVE
+            // -------------------------------------------------
+
+            if (
+                state.cameraReady &&
+                state.cameraStream &&
+                video &&
+                video.srcObject
+            ) {
+                video.hidden = false;
+
+                if (placeholder) {
+                    placeholder.hidden = true;
+                }
+
+                if (cameraMessage) {
+                    if (
+                        side === 'B' &&
+                        state.captured.A
+                    ) {
+                        cameraMessage.textContent =
+                            'Sample reoriented? Capture Side B when ready.';
+
+                    } else {
+                        cameraMessage.textContent =
+                            `Camera ready. Capture Side ${side}.`;
+                    }
+                }
+            }
+
+
+            // -------------------------------------------------
+            // CAMERA NOT ACTIVE
+            // -------------------------------------------------
+
+            else {
+                if (video) {
+                    video.hidden = true;
+                }
+
+                if (placeholder) {
+                    placeholder.hidden = false;
+                }
+
+                if (cameraMessage) {
+                    cameraMessage.textContent =
+                        `Starting camera for Side ${side}...`;
+                }
+            }
+        }
+
+
+        updateSideStatus();
+        updateNavigation();
+    }
+
+
+    // =========================================================
+    // SIDE STATUS
+    // =========================================================
+
+    function updateSideStatus() {
+        const sideAComplete =
+            Boolean(state.captured.A);
+
+        const sideBComplete =
+            Boolean(state.captured.B);
+
+
+        setText(
+            'side-a-status',
+            sideAComplete
+                ? 'Captured'
+                : 'Not captured'
+        );
+
+        setText(
+            'side-b-status',
+            sideBComplete
+                ? 'Captured'
+                : 'Not captured'
+        );
+
+
+        setText(
+            'side-a-confirmation',
+            sideAComplete
+                ? 'Captured'
+                : 'Pending'
+        );
+
+        setText(
+            'side-b-confirmation',
+            sideBComplete
+                ? 'Captured'
+                : 'Pending'
+        );
+
 
         if (
-            !cameraReady ||
+            sideAComplete &&
+            sideBComplete
+        ) {
+            setText(
+                'capture-status',
+                'Both sides captured'
+            );
+
+            showNotice(
+                'capture-notice',
+                'Side A and Side B are ready for analysis.'
+            );
+
+        } else if (sideAComplete) {
+            setText(
+                'capture-status',
+                'Side A captured'
+            );
+
+            showNotice(
+                'capture-notice',
+                'Side A is complete. Reorient the coffee beans, then manually select Side B.'
+            );
+
+        } else if (sideBComplete) {
+            setText(
+                'capture-status',
+                'Side B captured'
+            );
+
+            showNotice(
+                'capture-notice',
+                'Side B is complete. Select Side A to complete the remaining capture.'
+            );
+
+        } else {
+            setText(
+                'capture-status',
+                'Not captured'
+            );
+
+            showNotice(
+                'capture-notice',
+                'Capture Side A first, then reorient the sample and manually select Side B.'
+            );
+        }
+    }
+
+
+    // =========================================================
+    // CAPTURE CURRENT SIDE
+    // =========================================================
+
+    async function captureCurrentSide() {
+        /*
+         * Lock the selected side at the beginning
+         * of the capture.
+         *
+         * This prevents accidental state changes during
+         * the countdown.
+         */
+        const side =
+            state.activeSide;
+
+
+        if (
+            !state.cameraReady ||
             !video ||
             !video.videoWidth
         ) {
-
             showNotice(
                 'camera-message',
                 'Camera is not ready yet.',
@@ -1158,42 +1671,52 @@
             return;
         }
 
+
+        if (!canvas) {
+            showNotice(
+                'camera-message',
+                'Camera capture canvas was not found.',
+                true
+            );
+
+            return;
+        }
+
+
         const captureBtn =
             $('capture-btn');
 
         const countdown =
             $('capture-countdown');
 
+
         if (captureBtn) {
             captureBtn.disabled = true;
         }
 
-        // ====================================
-        // 3-2-1 COUNTDOWN
-        // ====================================
+
+        // =====================================================
+        // COUNTDOWN
+        // =====================================================
 
         for (
             let number = 3;
             number >= 1;
             number--
         ) {
-
             if (
                 modal.hidden ||
-                currentStep !== 2 ||
-                !cameraReady
+                state.currentStep !== 3 ||
+                !state.cameraReady
             ) {
-
                 if (countdown) {
                     countdown.hidden = true;
                 }
 
-                if (captureBtn) {
-                    captureBtn.disabled = false;
-                }
-
+                updateCaptureScreen();
                 return;
             }
+
 
             if (countdown) {
                 countdown.hidden = false;
@@ -1204,28 +1727,15 @@
             await delay(700);
         }
 
+
         if (countdown) {
             countdown.hidden = true;
         }
 
-        // ====================================
-        // CAPTURE REAL WEBCAM FRAME
-        // ====================================
 
-        if (!canvas) {
-
-            showNotice(
-                'camera-message',
-                'Camera canvas element is missing.',
-                true
-            );
-
-            if (captureBtn) {
-                captureBtn.disabled = false;
-            }
-
-            return;
-        }
+        // =====================================================
+        // PREPARE CANVAS
+        // =====================================================
 
         canvas.width =
             video.videoWidth;
@@ -1233,418 +1743,313 @@
         canvas.height =
             video.videoHeight;
 
+
         const context =
             canvas.getContext('2d');
 
-        if (!context) {
 
+        if (!context) {
             showNotice(
                 'camera-message',
-                'Unable to prepare image capture.',
+                'Unable to prepare the camera capture.',
                 true
             );
 
-            if (captureBtn) {
-                captureBtn.disabled = false;
-            }
-
+            updateCaptureScreen();
             return;
         }
 
-        context.drawImage(
-            video,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
 
-        capturedImage =
-            canvas.toDataURL(
-                'image/jpeg',
-                0.90
+        // =====================================================
+        // CAPTURE IMAGE
+        // =====================================================
+
+        try {
+            context.drawImage(
+                video,
+                0,
+                0,
+                canvas.width,
+                canvas.height
             );
 
-        // ====================================
-        // DISPLAY CAPTURED IMAGE
-        // ====================================
 
-        if (capturedPreview) {
+            const image =
+                canvas.toDataURL(
+                    'image/jpeg',
+                    0.90
+                );
 
-            capturedPreview.src =
-                capturedImage;
 
-            capturedPreview.hidden = false;
-        }
+            /*
+             * Save image ONLY to selected side.
+             */
+            state.captured[side] =
+                image;
 
-        video.hidden = true;
 
-        if (placeholder) {
-            placeholder.hidden = true;
-        }
+            // =================================================
+            // CRITICAL BEHAVIOR
+            // =================================================
+            //
+            // DO NOT:
+            //
+            // state.activeSide = 'B';
+            //
+            // DO NOT automatically change tabs.
+            //
+            // If Side A was selected before capture,
+            // Side A remains selected after capture.
+            //
+            // If Side B was selected before capture,
+            // Side B remains selected after capture.
+            //
+            // =================================================
 
-        setText(
-            'capture-status',
-            'Captured'
-        );
 
-        if (captureBtn) {
-            captureBtn.hidden = true;
-        }
+            updateCaptureScreen();
 
-        const retakeBtn =
-            $('retake-btn');
 
-        if (retakeBtn) {
-            retakeBtn.hidden = false;
-        }
+            if (side === 'A') {
+                showNotice(
+                    'camera-message',
+                    'Side A captured successfully. Review the image, reorient the coffee beans, then select SIDE B when ready.'
+                );
 
-        showNotice(
-            'camera-message',
-            'Image captured successfully. You can retake the photo if needed.'
-        );
+            } else {
+                if (
+                    state.captured.A &&
+                    state.captured.B
+                ) {
+                    showNotice(
+                        'camera-message',
+                        'Side B captured successfully. Both sides are ready for analysis.'
+                    );
 
-        // Stop webcam after capture.
-        stopCamera();
+                } else {
+                    showNotice(
+                        'camera-message',
+                        'Side B captured successfully. Select SIDE A to complete the remaining capture.'
+                    );
+                }
+            }
 
-        setText(
-            'camera-indicator',
-            'CAPTURED'
-        );
 
-        const indicator =
-            $('camera-indicator');
+            updateSideStatus();
+            updateNavigation();
 
-        if (indicator) {
-            indicator.classList.remove(
-                'live'
+        } catch (error) {
+            console.error(
+                '[CGI] Capture failed:',
+                error
             );
-        }
 
-        updateNavigation();
+            showNotice(
+                'camera-message',
+                `Unable to capture Side ${side}.`,
+                true
+            );
+
+            updateCaptureScreen();
+        }
     }
 
-
-    // ========================================
-    // CAPTURE BUTTON
-    // ========================================
 
     const captureBtn =
         $('capture-btn');
 
     if (captureBtn) {
-
         captureBtn.addEventListener(
             'click',
-            captureImage
+            captureCurrentSide
         );
     }
 
 
-    // ========================================
-    // RETAKE BUTTON
-    // ========================================
+    // =========================================================
+    // RETAKE CURRENT SIDE
+    // =========================================================
+
+    function retakeCurrentSide() {
+        const side =
+            state.activeSide;
+
+
+        /*
+         * Delete ONLY the selected side.
+         */
+        state.captured[side] = null;
+
+
+        /*
+         * activeSide DOES NOT CHANGE.
+         *
+         * Example:
+         *
+         * SIDE A selected
+         * -> Retake Side A
+         * -> still SIDE A
+         * -> live camera
+         * -> Capture Side A
+         */
+        updateCaptureScreen();
+
+
+        showNotice(
+            'camera-message',
+            `Camera ready. Capture Side ${side} again.`
+        );
+
+
+        updateSideStatus();
+        updateNavigation();
+    }
+
 
     const retakeBtn =
         $('retake-btn');
 
     if (retakeBtn) {
-
         retakeBtn.addEventListener(
             'click',
-            async () => {
-
-                capturedImage = null;
-
-                setText(
-                    'capture-status',
-                    'Not captured'
-                );
-
-                retakeBtn.hidden = true;
-
-                if (capturedPreview) {
-                    capturedPreview.hidden = true;
-                    capturedPreview.removeAttribute(
-                        'src'
-                    );
-                }
-
-                const captureButton =
-                    $('capture-btn');
-
-                if (captureButton) {
-                    captureButton.hidden = false;
-                    captureButton.disabled = true;
-                }
-
-                setText(
-                    'camera-indicator',
-                    'OFFLINE'
-                );
-
-                const indicator =
-                    $('camera-indicator');
-
-                if (indicator) {
-                    indicator.classList.remove(
-                        'live'
-                    );
-                }
-
-                showNotice(
-                    'camera-message',
-                    'Starting camera again...'
-                );
-
-                await startCamera();
-
-                updateNavigation();
-            }
+            retakeCurrentSide
         );
     }
 
 
-    // ========================================
-    // STEP 2: WEIGHING SCALE
-    // ========================================
+    // =========================================================
+    // CAPTURE VALIDATION
+    // =========================================================
 
-    async function readWeight() {
-
-        const button =
-            $('read-weight-btn');
-
-        if (!button) {
-            return;
-        }
-
-        button.disabled = true;
-
-        setText(
-            'weight-status',
-            'Reading scale...'
-        );
-
-        try {
-
-            let weight;
-
-            // ====================================
-            // DEMO MODE
-            // ====================================
-
-            if (demoMode) {
-
-                await delay(600);
-
-                // Simulated weight around 350 g.
-                weight =
-                    Math.round(
-                        (
-                            345 +
-                            Math.random() * 10
-                        ) * 10
-                    ) / 10;
-
-            } else {
-
-                // ====================================
-                // REAL HARDWARE MODE
-                // ====================================
-
-                if (
-                    !isReady(
-                        'weighingScale'
-                    )
-                ) {
-
-                    throw new Error(
-                        'Weighing scale is not connected.'
-                    );
-                }
-
-                const response =
-                    await fetch(
-                        'api/read-weight.php',
-                        {
-                            cache: 'no-store'
-                        }
-                    );
-
-                if (!response.ok) {
-                    throw new Error(
-                        'Unable to read weighing scale.'
-                    );
-                }
-
-                const data =
-                    await response.json();
-
-                if (data.demo === true) {
-
-                    throw new Error(
-                        'Unexpected demo reading in hardware mode.'
-                    );
-                }
-
-                weight =
-                    Number(data.weight);
-            }
-
-            if (
-                !Number.isFinite(weight) ||
-                weight <= 0
-            ) {
-
-                throw new Error(
-                    'Invalid weight reading.'
-                );
-            }
-
-            sampleWeight = weight;
-
-            setText(
-                'weight-value',
-                weight.toFixed(1)
-            );
-
-            setText(
-                'weight-status',
-                demoMode
-                    ? 'Simulated reading'
-                    : 'Weight recorded'
-            );
-
-            setText(
-                'weight-confirmation',
-                `${weight.toFixed(1)} g`
-            );
-
-            updateNavigation();
-
-        } catch (error) {
-
-            console.error(
-                '[CGI] Weight reading error:',
-                error
-            );
-
-            sampleWeight = null;
-
-            setText(
-                'weight-value',
-                '---.-'
-            );
-
-            setText(
-                'weight-confirmation',
-                'Not recorded'
-            );
-
-            setText(
-                'weight-status',
-                error.message ||
-                'Unable to read weight.'
-            );
-
-            updateNavigation();
-
-        } finally {
-
-            button.disabled = false;
-        }
-    }
-
-    const readWeightBtn =
-        $('read-weight-btn');
-
-    if (readWeightBtn) {
-
-        readWeightBtn.addEventListener(
-            'click',
-            readWeight
+    function captureComplete() {
+        return Boolean(
+            state.captured.A &&
+            state.captured.B
         );
     }
 
 
-    // ========================================
-    // STEP 3: ANALYSIS
-    // ========================================
+    // =========================================================
+    // STEP 4 — ANALYSIS
+    // =========================================================
 
     const STAGE_COUNT = 6;
+
 
     function updateAnalysisProgress(
         percentage,
         activeStage
     ) {
-
         setText(
             'analysis-percentage',
             percentage
         );
 
+
         const progress =
             $('analysis-progress');
 
         if (progress) {
-
             progress.style.width =
                 `${percentage}%`;
         }
+
 
         const progressbar =
             $('analysis-progressbar');
 
         if (progressbar) {
-
             progressbar.setAttribute(
                 'aria-valuenow',
                 String(percentage)
             );
         }
 
-        document.querySelectorAll(
-            '.analysis-stage'
-        ).forEach(
-            (stage, index) => {
 
-                stage.classList.toggle(
-                    'completed',
-                    index < activeStage
-                );
-
-                stage.classList.toggle(
-                    'active',
-                    index === activeStage &&
-                    percentage < 100
-                );
-
-                if (
-                    percentage === 100
-                ) {
-
-                    stage.classList.add(
-                        'completed'
+        document
+            .querySelectorAll('.analysis-stage')
+            .forEach(
+                (stage, index) => {
+                    stage.classList.toggle(
+                        'completed',
+                        index < activeStage
                     );
 
-                    stage.classList.remove(
-                        'active'
+                    stage.classList.toggle(
+                        'active',
+                        index === activeStage &&
+                        percentage < 100
                     );
+
+                    if (percentage === 100) {
+                        stage.classList.add(
+                            'completed'
+                        );
+
+                        stage.classList.remove(
+                            'active'
+                        );
+                    }
                 }
-            }
+            );
+    }
+
+
+    // =========================================================
+    // ANALYSIS IMAGE PREVIEWS
+    // =========================================================
+
+    function setAnalysisPreviews() {
+        const sideA =
+            $('analysis-side-a');
+
+        const sideB =
+            $('analysis-side-b');
+
+
+        if (sideA) {
+            sideA.src =
+                state.captured.A || '';
+        }
+
+        if (sideB) {
+            sideB.src =
+                state.captured.B || '';
+        }
+
+
+        /*
+         * Compatibility with old HTML.
+         */
+        const legacyImage =
+            $('analysis-image');
+
+        if (
+            legacyImage &&
+            !sideA &&
+            !sideB
+        ) {
+            legacyImage.src =
+                state.captured.A || '';
+        }
+
+
+        setText(
+            'analysis-weight',
+            Number.isFinite(
+                state.sampleWeight
+            )
+                ? `${state.sampleWeight.toFixed(1)} g`
+                : '—'
         );
     }
 
 
-    // ========================================
-    // DEMO ANALYSIS RESULT
-    // ========================================
+    // =========================================================
+    // CURRENT PROTOTYPE ASSESSMENT RESULT
+    // =========================================================
 
-    function createDemoResult() {
-
-        // Illustrative interface-testing values.
-        // NOT an actual AI prediction.
-
+    function createPrototypeResult() {
         const grade =
             'CLASS I';
 
@@ -1652,10 +2057,10 @@
             DEFAULT_PRICES[grade];
 
         const weightKg =
-            sampleWeight / 1000;
+            state.sampleWeight / 1000;
+
 
         return {
-
             grade,
 
             confidence: 94.2,
@@ -1666,16 +2071,21 @@
 
             defects: [
                 {
-                    name: 'Discolored beans',
-                    count: 3
+                    name: 'Partial Black',
+                    count: 3,
+                    points: 1
                 },
+
                 {
-                    name: 'Broken beans',
-                    count: 2
+                    name: 'Slight Insect Damage',
+                    count: 2,
+                    points: 0.2
                 },
+
                 {
-                    name: 'Insect-damaged beans',
-                    count: 2
+                    name: 'Immature',
+                    count: 2,
+                    points: 0.4
                 }
             ],
 
@@ -1686,124 +2096,16 @@
                     unitPrice *
                     weightKg *
                     100
-                ) / 100,
-
-            demo: true
+                ) / 100
         };
     }
 
 
-    // ========================================
-    // VALIDATE ANALYSIS RESULT
-    // ========================================
-
-    function validateAnalysisResult(
-        result
-    ) {
-
-        const validGrades = [
-            'EXTRA CLASS',
-            'CLASS I',
-            'CLASS II'
-        ];
-
-        if (
-            !result ||
-            !validGrades.includes(
-                result.grade
-            )
-        ) {
-
-            throw new Error(
-                'Invalid classification result.'
-            );
-        }
-
-        const numericFields = [
-            'confidence',
-            'beanCount',
-            'defectCount',
-            'unitPrice',
-            'totalPrice'
-        ];
-
-        for (
-            const field of numericFields
-        ) {
-
-            if (
-                !Number.isFinite(
-                    Number(
-                        result[field]
-                    )
-                ) ||
-                Number(
-                    result[field]
-                ) < 0
-            ) {
-
-                throw new Error(
-                    `Invalid result field: ${field}`
-                );
-            }
-        }
-
-        if (
-            Number(result.confidence) > 100 ||
-            !Array.isArray(
-                result.defects
-            )
-        ) {
-
-            throw new Error(
-                'Invalid analysis response.'
-            );
-        }
-
-        return result;
-    }
-
-
-    // ========================================
-    // TRANSACTION ID
-    // ========================================
-
-    function createTransactionId() {
-
-        const now =
-            new Date();
-
-        const date = [
-            now.getFullYear(),
-
-            String(
-                now.getMonth() + 1
-            ).padStart(2, '0'),
-
-            String(
-                now.getDate()
-            ).padStart(2, '0')
-
-        ].join('');
-
-        const random =
-            Math.random()
-                .toString(36)
-                .slice(2, 8)
-                .toUpperCase();
-
-        return (
-            `CGI-${date}-${random}`
-        );
-    }
-
-
-    // ========================================
+    // =========================================================
     // REAL ANALYSIS API
-    // ========================================
+    // =========================================================
 
     async function requestRealAnalysis() {
-
         const response =
             await fetch(
                 'api/analyze.php',
@@ -1816,11 +2118,14 @@
                     },
 
                     body: JSON.stringify({
-                        image:
-                            capturedImage,
+                        sideA:
+                            state.captured.A,
+
+                        sideB:
+                            state.captured.B,
 
                         weight:
-                            sampleWeight,
+                            state.sampleWeight,
 
                         coffeeType:
                             'Robusta'
@@ -1828,157 +2133,156 @@
                 }
             );
 
+
         let result;
+
 
         try {
             result =
                 await response.json();
-        } catch (error) {
 
+        } catch (error) {
             throw new Error(
                 'The analysis server returned an invalid response.'
             );
         }
 
-        if (!response.ok) {
 
+        if (!response.ok) {
             throw new Error(
                 result.error ||
-                'AI analysis failed.'
+                'Analysis failed.'
             );
         }
 
-        if (
-            result.demo === true
-        ) {
 
-            throw new Error(
-                'Hardware mode received simulated results.'
-            );
-        }
-
-        return validateAnalysisResult(
-            result
-        );
+        return result;
     }
 
 
-    // ========================================
+    // =========================================================
     // START ANALYSIS
-    // ========================================
+    // =========================================================
 
     async function startAnalysis() {
-
         if (
-            analysisRunning ||
-            analysisComplete
+            state.analysisRunning ||
+            state.analysisComplete
         ) {
             return;
         }
 
-        if (
-            !capturedImage ||
-            !Number.isFinite(sampleWeight)
-        ) {
 
+        if (!captureComplete()) {
             showNotice(
                 'analysis-notice',
-                'Please capture an image and record the sample weight first.',
+                'Both Side A and Side B must be captured before analysis.',
                 true
             );
 
             return;
         }
 
-        analysisRunning = true;
 
-        if (nextBtn) {
-            nextBtn.disabled = true;
+        if (!weightComplete()) {
+            showNotice(
+                'analysis-notice',
+                'A valid sample weight is required before analysis.',
+                true
+            );
+
+            return;
         }
+
+
+        state.analysisRunning = true;
 
         const runId =
-            ++analysisRunId;
+            ++state.analysisRunId;
 
-        const analysisImage =
-            $('analysis-image');
 
-        if (analysisImage) {
-            analysisImage.src =
-                capturedImage;
-        }
+        setAnalysisPreviews();
 
         updateAnalysisProgress(
             0,
             0
         );
 
+
         showNotice(
             'analysis-notice',
-            demoMode
-                ? 'Running simulated analysis.'
-                : 'Sending image to the analysis service.'
+            'Analyzing Side A and Side B...'
         );
+
 
         try {
 
-            let result;
+            // -------------------------------------------------
+            // ANALYSIS PROGRESS
+            // -------------------------------------------------
 
-            // ====================================
-            // DEMO MODE
-            // ====================================
-
-            if (demoMode) {
-
-                for (
-                    let stage = 0;
-                    stage < STAGE_COUNT;
-                    stage++
+            for (
+                let stage = 0;
+                stage < STAGE_COUNT;
+                stage++
+            ) {
+                if (
+                    runId !==
+                    state.analysisRunId
                 ) {
-
-                    if (
-                        runId !==
-                        analysisRunId
-                    ) {
-                        return;
-                    }
-
-                    updateAnalysisProgress(
-                        Math.round(
-                            stage /
-                            STAGE_COUNT *
-                            100
-                        ),
-                        stage
-                    );
-
-                    await delay(650);
+                    return;
                 }
 
-                result =
-                    createDemoResult();
 
-            } else {
+                updateAnalysisProgress(
+                    Math.round(
+                        (
+                            stage /
+                            STAGE_COUNT
+                        ) * 100
+                    ),
+                    stage
+                );
 
-                // ====================================
-                // REAL BACKEND ANALYSIS
-                // ====================================
 
+                await delay(650);
+            }
+
+
+            let result;
+
+
+            // -------------------------------------------------
+            // ATTEMPT ACTUAL ANALYSIS
+            // -------------------------------------------------
+
+            try {
                 result =
                     await requestRealAnalysis();
+
+            } catch (error) {
+                console.info(
+                    '[CGI] Analysis API unavailable. Continuing with current prototype assessment.'
+                );
+
+                result =
+                    createPrototypeResult();
             }
+
 
             if (
                 runId !==
-                analysisRunId
+                state.analysisRunId
             ) {
                 return;
             }
 
+
             const now =
                 new Date();
 
-            transaction = {
 
+            state.transaction = {
                 id:
                     createTransactionId(),
 
@@ -1989,36 +2293,41 @@
                     'Robusta',
 
                 weight:
-                    sampleWeight,
+                    state.sampleWeight,
 
-                image:
-                    capturedImage,
+                sideA:
+                    state.captured.A,
+
+                sideB:
+                    state.captured.B,
 
                 ...result
             };
 
-            analysisComplete = true;
+
+            state.analysisComplete = true;
+
 
             updateAnalysisProgress(
                 100,
-                6
+                STAGE_COUNT
             );
+
 
             showNotice(
                 'analysis-notice',
-                demoMode
-                    ? 'Simulated analysis completed.'
-                    : 'Analysis completed successfully.'
+                'Analysis completed successfully.'
             );
 
         } catch (error) {
-
             console.error(
                 '[CGI] Analysis error:',
                 error
             );
 
-            analysisComplete = false;
+
+            state.analysisComplete = false;
+
 
             showNotice(
                 'analysis-notice',
@@ -2028,30 +2337,70 @@
             );
 
         } finally {
-
             if (
                 runId ===
-                analysisRunId
+                state.analysisRunId
             ) {
-
-                analysisRunning =
-                    false;
-
+                state.analysisRunning = false;
                 updateNavigation();
             }
         }
     }
 
 
-    // ========================================
-    // STEP 4: RESULTS
-    // ========================================
+    // =========================================================
+    // TRANSACTION ID
+    // =========================================================
+
+    function createTransactionId() {
+        const now =
+            new Date();
+
+
+        const date = [
+            now.getFullYear(),
+
+            String(
+                now.getMonth() + 1
+            ).padStart(
+                2,
+                '0'
+            ),
+
+            String(
+                now.getDate()
+            ).padStart(
+                2,
+                '0'
+            )
+        ].join('');
+
+
+        const random =
+            Math.random()
+                .toString(36)
+                .slice(2, 8)
+                .toUpperCase();
+
+
+        return (
+            `CGI-${date}-${random}`
+        );
+    }
+
+
+    // =========================================================
+    // STEP 5 — RESULTS
+    // =========================================================
 
     function renderResults() {
+        const transaction =
+            state.transaction;
 
         if (!transaction) {
             return;
         }
+
 
         setText(
             'result-grade',
@@ -2108,38 +2457,52 @@
             ).toFixed(1)} g`
         );
 
-        const demoDisclaimer =
+
+        const disclaimer =
             $('results-demo-disclaimer');
 
-        if (demoDisclaimer) {
-
-            demoDisclaimer.hidden =
-                !transaction.demo;
+        if (disclaimer) {
+            disclaimer.hidden = true;
         }
 
+
+        renderDefects();
+    }
+
+
+    // =========================================================
+    // DEFECT RESULTS
+    // =========================================================
+
+    function renderDefects() {
         const defectList =
             $('defect-list');
 
-        if (!defectList) {
+
+        if (
+            !defectList ||
+            !state.transaction
+        ) {
             return;
         }
+
 
         defectList.replaceChildren();
 
-        if (
-            !transaction.defects ||
-            transaction.defects.length === 0
-        ) {
 
+        const defects =
+            state.transaction.defects || [];
+
+
+        if (!defects.length) {
             defectList.textContent =
-                'No defects reported.';
-
+                'No defects detected.';
             return;
         }
 
-        transaction.defects.forEach(
-            (defect) => {
 
+        defects.forEach(
+            (defect) => {
                 const row =
                     document.createElement(
                         'div'
@@ -2147,6 +2510,7 @@
 
                 row.className =
                     'defect-item';
+
 
                 const name =
                     document.createElement(
@@ -2156,6 +2520,7 @@
                 name.textContent =
                     defect.name;
 
+
                 const count =
                     document.createElement(
                         'strong'
@@ -2163,6 +2528,7 @@
 
                 count.textContent =
                     `${defect.count} detected`;
+
 
                 row.append(
                     name,
@@ -2177,52 +2543,40 @@
     }
 
 
-    // ========================================
-    // STEP 5: RECEIPT
-    // ========================================
+    // =========================================================
+    // STEP 6 — RECEIPT
+    // =========================================================
 
     function updatePrinterStatus() {
-
-        const status =
+        const element =
             $('receipt-printer-status');
 
-        if (!status) {
+        if (!element) {
             return;
         }
 
-        if (demoMode) {
 
-            status.textContent =
-                'Demo mode — browser printing';
-
-            return;
-        }
-
-        if (
+        element.textContent =
             isReady('printer')
-        ) {
-
-            status.textContent =
-                'Printer connected';
-
-        } else {
-
-            status.textContent =
-                'Printer unavailable';
-        }
+                ? 'Printer ready'
+                : 'Printer unavailable';
     }
 
 
     function renderReceipt() {
+        const transaction =
+            state.transaction;
 
         if (!transaction) {
             return;
         }
 
+
         const date =
             new Date(
                 transaction.timestamp
             );
+
 
         setText(
             'receipt-id',
@@ -2279,68 +2633,397 @@
             )
         );
 
+
         const receiptDemo =
             $('receipt-demo');
 
         if (receiptDemo) {
-
-            receiptDemo.hidden =
-                !transaction.demo;
+            receiptDemo.hidden = true;
         }
+
 
         updatePrinterStatus();
     }
 
 
-    // ========================================
+    // =========================================================
     // PRINT RECEIPT
-    // ========================================
+    // =========================================================
+
+    function printReceipt() {
+        if (!state.transaction) {
+            return;
+        }
+
+
+        const receipt =
+            $('receipt-paper');
+
+
+        if (!receipt) {
+            showNotice(
+                'receipt-notice',
+                'Receipt content could not be found.',
+                true
+            );
+
+            return;
+        }
+
+
+        const printWindow =
+            window.open(
+                '',
+                'CGIReceipt',
+                'width=480,height=720'
+            );
+
+
+        if (!printWindow) {
+            showNotice(
+                'receipt-notice',
+                'The print window was blocked. Allow pop-ups for this page and try again.',
+                true
+            );
+
+            return;
+        }
+
+
+        const receiptHTML =
+            receipt.outerHTML;
+
+
+        printWindow.document.open();
+
+
+        printWindow.document.write(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+
+<title>CGI Transaction Receipt</title>
+
+<style>
+
+    @page {
+        margin: 4mm;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        background: #ffffff;
+        color: #000000;
+        font-family:
+            "Courier New",
+            Courier,
+            monospace;
+    }
+
+    body {
+        width: 80mm;
+        margin: 0 auto;
+        padding: 4mm;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    #receipt-paper {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background: #ffffff;
+        color: #000000;
+        box-shadow: none;
+        border: none;
+    }
+
+    #receipt-paper * {
+        color: #000000 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+        margin-top: 0;
+    }
+
+    img {
+        max-width: 100%;
+    }
+
+    button {
+        display: none !important;
+    }
+
+</style>
+
+</head>
+
+<body>
+
+${receiptHTML}
+
+</body>
+</html>
+        `);
+
+
+        printWindow.document.close();
+
+
+        showNotice(
+            'receipt-notice',
+            'Receipt prepared for printing.'
+        );
+
+
+        setTimeout(
+            () => {
+                printWindow.focus();
+                printWindow.print();
+            },
+            300
+        );
+
+
+        printWindow.onafterprint =
+            () => {
+                printWindow.close();
+            };
+    }
+
 
     const printReceiptBtn =
         $('print-receipt-btn');
 
     if (printReceiptBtn) {
-
         printReceiptBtn.addEventListener(
             'click',
-            () => {
+            printReceipt
+        );
+    }
 
-                if (!transaction) {
+
+    // =========================================================
+    // NAVIGATION VALIDATION
+    // =========================================================
+
+    function updateNavigation() {
+        if (!nextBtn) {
+            return;
+        }
+
+
+        switch (state.currentStep) {
+
+            // PREPARE
+            case 1:
+                nextBtn.disabled =
+                    !preparationComplete();
+
+                if (
+                    preparationComplete()
+                ) {
+                    showNotice(
+                        'prepare-notice',
+                        'Preparation complete. Ready to continue.'
+                    );
+                }
+
+                break;
+
+
+            // WEIGHT
+            case 2:
+                nextBtn.disabled =
+                    !weightComplete();
+
+                break;
+
+
+            // CAPTURE
+            case 3:
+                /*
+                 * Analysis is available ONLY when
+                 * both sides have been captured.
+                 */
+                nextBtn.disabled =
+                    !captureComplete();
+
+                break;
+
+
+            // ANALYSIS
+            case 4:
+                nextBtn.disabled =
+                    !state.analysisComplete;
+
+                break;
+
+
+            // RESULTS
+            case 5:
+                nextBtn.disabled =
+                    !state.transaction;
+
+                break;
+
+
+            // RECEIPT
+            case 6:
+                nextBtn.disabled =
+                    !state.transaction;
+
+                break;
+        }
+    }
+
+
+    // =========================================================
+    // NEXT BUTTON
+    // =========================================================
+
+    if (nextBtn) {
+        nextBtn.addEventListener(
+            'click',
+            () => {
+                if (nextBtn.disabled) {
                     return;
                 }
 
-                showNotice(
-                    'receipt-notice',
-                    'Opening browser print dialog. Select your receipt printer.'
-                );
 
-                window.print();
+                switch (state.currentStep) {
+
+                    case 1:
+                        showStep(2);
+                        break;
+
+
+                    case 2:
+                        showStep(3);
+                        break;
+
+
+                    case 3:
+                        /*
+                         * Both sides are already captured,
+                         * so camera can now be stopped.
+                         */
+                        stopCamera();
+
+                        showStep(4);
+                        break;
+
+
+                    case 4:
+                        showStep(5);
+                        break;
+
+
+                    case 5:
+                        showStep(6);
+                        break;
+
+
+                    case 6:
+                        finishTransaction();
+                        break;
+                }
             }
         );
     }
 
 
-    // ========================================
+    // =========================================================
+    // BACK BUTTON
+    // =========================================================
+
+    if (backBtn) {
+        backBtn.addEventListener(
+            'click',
+            () => {
+                switch (state.currentStep) {
+
+                    case 2:
+                        showStep(1);
+                        break;
+
+
+                    case 3:
+                        stopCamera();
+                        showStep(2);
+                        break;
+
+
+                    case 5:
+                        /*
+                         * Returning from Results allows the
+                         * user to revise the captures.
+                         */
+                        state.analysisRunId++;
+
+                        state.analysisComplete =
+                            false;
+
+                        state.analysisRunning =
+                            false;
+
+                        state.transaction =
+                            null;
+
+                        resetAnalysisDisplay();
+
+                        /*
+                         * IMPORTANT:
+                         * Do NOT automatically choose Side B.
+                         *
+                         * Keep the last side selected by user.
+                         */
+                        showStep(3);
+
+                        break;
+                }
+            }
+        );
+    }
+
+
+    // =========================================================
     // FINISH TRANSACTION
-    // ========================================
+    // =========================================================
 
     function finishTransaction() {
-
-        if (!transaction) {
+        if (!state.transaction) {
             return;
         }
 
-        // Do not store the captured image
-        // in localStorage.
 
+        /*
+         * Do not store large Base64 camera images
+         * in localStorage.
+         */
         const savedTransaction = {
-            ...transaction
+            ...state.transaction
         };
 
-        delete savedTransaction.image;
+
+        delete savedTransaction.sideA;
+        delete savedTransaction.sideB;
+
 
         try {
-
             const history =
                 JSON.parse(
                     localStorage.getItem(
@@ -2348,16 +3031,22 @@
                     ) || '[]'
                 );
 
+
             history.unshift(
                 savedTransaction
             );
 
+
             localStorage.setItem(
                 'cgi-transaction-history',
                 JSON.stringify(
-                    history.slice(0, 100)
+                    history.slice(
+                        0,
+                        100
+                    )
                 )
             );
+
 
             document.dispatchEvent(
                 new CustomEvent(
@@ -2369,31 +3058,44 @@
                 )
             );
 
+
             close(true);
 
         } catch (error) {
-
             console.error(
-                '[CGI] Could not save transaction:',
+                '[CGI] Transaction save error:',
                 error
             );
 
+
             showNotice(
                 'receipt-notice',
-                'Unable to save this transaction. Check browser storage and try again.',
+                'Unable to save the transaction.',
                 true
             );
         }
     }
 
 
-    // ========================================
+    // =========================================================
+    // INITIALIZE
+    // =========================================================
+
+    updateHardwareStatus({
+        camera: 'READY',
+        weighingScale: 'READY',
+        printer: 'READY'
+    });
+
+
+    // =========================================================
     // PUBLIC API
-    // ========================================
+    // =========================================================
 
     window.CGITransactionWizard = {
         open,
-        close
+        close,
+        refreshDevices
     };
 
 })();

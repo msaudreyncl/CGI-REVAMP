@@ -1,0 +1,54 @@
+/* =========================================================
+   MAIN NAVIGATION
+========================================================= */
+
+.main-nav {
+    justify-self: center;
+    display: grid;
+    grid-template-columns: repeat(3, 130px);
+    align-items: center;
+    height: 48px;
+    padding: 4px;
+    border: 1px solid rgba(255, 253, 249, .09);
+    border-radius: 13px;
+    background: rgba(255, 253, 249, .025);
+}
+
+.main-nav a {
+    position: relative;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    color: rgba(255, 253, 249, .62);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    transition:
+        color .2s ease,
+        background .2s ease;
+}
+
+.main-nav a:hover {
+    color: rgba(255, 253, 249, .9);
+    background: rgba(255, 253, 249, .04);
+}
+
+.main-nav a.active {
+    color: #FFFDF9;
+    background: rgba(184, 134, 59, .12);
+}
+
+.main-nav a.active::after {
+    content: "";
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    width: 20px;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--gold);
+    transform: translateX(-50%);
+}

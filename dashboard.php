@@ -43,408 +43,9 @@ $devices = [
     <title>Coffee Grade Identification</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin>
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-
-    <link
-        rel="stylesheet"
-        href="style/dashboard-style.css">
-
-    <style>
-
-        [hidden] {
-            display: none !important;
-        }
-
-        .wizard-page {
-            display: none;
-        }
-
-        .wizard-page.active {
-            display: block;
-        }
-
-        /* =====================================================
-           WEIGHT STEP
-        ===================================================== */
-
-        .weight-step-layout {
-            display: grid;
-            grid-template-columns: minmax(0, 1.3fr) minmax(280px, .7fr);
-            gap: 24px;
-            align-items: stretch;
-        }
-
-        .scale-display-card {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 360px;
-            padding: 35px;
-            border-radius: 18px;
-            background: #f8f1e8;
-            text-align: center;
-        }
-
-        .scale-label {
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: .12em;
-            text-transform: uppercase;
-            opacity: .65;
-        }
-
-        .large-weight-display {
-            display: flex;
-            align-items: baseline;
-            justify-content: center;
-            gap: 8px;
-            margin: 25px 0 8px;
-        }
-
-        .large-weight-display #weight-value {
-            font-size: clamp(56px, 8vw, 86px);
-            line-height: 1;
-            font-weight: 700;
-            letter-spacing: -.04em;
-        }
-
-        .large-weight-display .weight-unit {
-            font-size: 24px;
-            font-weight: 600;
-        }
-
-        .weight-status-large {
-            min-height: 24px;
-            margin-bottom: 22px;
-            font-size: 14px;
-        }
-
-        .weight-status-large.accepted {
-            color: #54734d;
-            font-weight: 600;
-        }
-
-        .weight-status-large.required {
-            color: #9b6d34;
-        }
-
-        .weight-requirement-card {
-            padding: 18px;
-            border: 1px solid #dfd1c0;
-            border-radius: 13px;
-            background: #fffaf4;
-        }
-
-        .weight-requirement-card.accepted {
-            border-color: #829d76;
-            background: #f3f8f0;
-        }
-
-        .weight-requirement-card strong {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .weight-requirement-card span {
-            font-size: 13px;
-            opacity: .7;
-        }
-
-        .weight-information-card {
-            padding: 24px;
-            border-radius: 18px;
-            background: #fffaf4;
-            border: 1px solid #e2d5c5;
-        }
-
-        .weight-information-card h4 {
-            margin-top: 0;
-        }
-
-        .weight-info-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 13px 0;
-            border-bottom: 1px solid #e8ddd1;
-        }
-
-        .weight-info-row:last-child {
-            border-bottom: 0;
-        }
-
-        .weight-info-row span {
-            opacity: .65;
-        }
-
-        .weight-info-row strong {
-            text-align: right;
-        }
-
-
-        /* =====================================================
-           CAPTURE STEP
-        ===================================================== */
-
-        .capture-layout {
-            display: grid;
-            grid-template-columns: minmax(0, 1.6fr) minmax(280px, .7fr);
-            gap: 24px;
-        }
-
-        .camera-panel {
-            min-width: 0;
-        }
-
-        .camera-viewport {
-            position: relative;
-            overflow: hidden;
-            min-height: 350px;
-            border-radius: 15px;
-            background: #1d1713;
-        }
-
-        .camera-viewport video,
-        .camera-viewport img {
-            width: 100%;
-            height: 100%;
-            min-height: 350px;
-            display: block;
-            object-fit: cover;
-        }
-
-        .camera-placeholder {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
-            text-align: center;
-            background: #251d18;
-        }
-
-        .camera-placeholder-icon {
-            margin-bottom: 10px;
-            font-size: 42px;
-        }
-
-        .camera-guides {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-        }
-
-        .camera-guide-frame {
-            position: absolute;
-            top: 9%;
-            right: 9%;
-            bottom: 9%;
-            left: 9%;
-            border: 2px dashed rgba(255,255,255,.65);
-            border-radius: 12px;
-        }
-
-        .camera-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 14px;
-        }
-
-        .camera-message {
-            min-height: 24px;
-        }
-
-        .side-selector {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 14px;
-        }
-
-        .side-selector button {
-            flex: 1;
-            padding: 11px;
-            border: 1px solid #d8c7b4;
-            border-radius: 10px;
-            background: #fffaf4;
-            cursor: pointer;
-            font: inherit;
-        }
-
-        .side-selector button.active {
-            color: #fff;
-            background: #4c3223;
-            border-color: #4c3223;
-        }
-
-        .side-capture-status {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 18px;
-        }
-
-        .side-status-card {
-            padding: 14px;
-            border: 1px solid #ded1c2;
-            border-radius: 11px;
-            background: #fffaf4;
-        }
-
-        .side-status-card.captured {
-            border-color: #819a75;
-            background: #f2f7ef;
-        }
-
-        .side-status-card strong {
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .side-status-card span {
-            font-size: 12px;
-            opacity: .65;
-        }
-
-
-        /* =====================================================
-           ANALYSIS
-        ===================================================== */
-
-        .analysis-layout {
-            display: grid;
-            grid-template-columns: minmax(0, 1.4fr) minmax(280px, .8fr);
-            gap: 24px;
-        }
-
-        .analysis-image-container {
-            position: relative;
-            overflow: hidden;
-            min-height: 340px;
-            border-radius: 15px;
-            background: #211914;
-        }
-
-        .analysis-image-container img {
-            width: 100%;
-            height: 100%;
-            min-height: 340px;
-            display: block;
-            object-fit: contain;
-        }
-
-        .analysis-image-label {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            padding: 6px 9px;
-            border-radius: 6px;
-            color: #fff;
-            background: rgba(0,0,0,.55);
-            font-size: 11px;
-            letter-spacing: .08em;
-        }
-
-        .analysis-stage {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 0;
-        }
-
-        .stage-dot {
-            width: 9px;
-            height: 9px;
-            flex: 0 0 auto;
-            border-radius: 50%;
-            background: #cfc4b7;
-        }
-
-        .analysis-stage.active .stage-dot {
-            background: #b68a4b;
-        }
-
-        .analysis-stage.done .stage-dot {
-            background: #69855e;
-        }
-
-
-        /* =====================================================
-           RESULTS
-        ===================================================== */
-
-        .results-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .grade-badge {
-            margin: 10px 0;
-            font-size: 42px;
-            font-weight: 700;
-        }
-
-        .defect-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .defect-table th,
-        .defect-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #e3d9ce;
-            text-align: left;
-        }
-
-        .defect-table th {
-            font-size: 11px;
-            letter-spacing: .07em;
-            text-transform: uppercase;
-        }
-
-
-        /* =====================================================
-           RECEIPT
-        ===================================================== */
-
-        .receipt-layout {
-            display: grid;
-            grid-template-columns: minmax(280px, 430px) minmax(240px, 1fr);
-            gap: 30px;
-            align-items: start;
-        }
-
-
-        /* =====================================================
-           RESPONSIVE
-        ===================================================== */
-
-        @media (max-width: 850px) {
-
-            .weight-step-layout,
-            .capture-layout,
-            .analysis-layout,
-            .results-layout,
-            .receipt-layout {
-                grid-template-columns: 1fr;
-            }
-
-        }
-
-    </style>
-
-</head>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style/dashboard-style.css?v=20261001-2"></head>
 
 
 <body>
@@ -1174,8 +775,7 @@ $devices = [
 
             <div
                 class="weight-requirement-card"
-                id="weight-requirement"
-                style="margin-top:20px; width:min(100%,360px);">
+                id="weight-requirement">
 
                 <strong>
                     Required sample weight
@@ -1632,34 +1232,122 @@ $devices = [
     </div>
 
 
-    <div class="analysis-layout">
+<div class="analysis-layout">
 
+    <!-- =========================================
+         CAPTURED SAMPLE PREVIEWS
+    ========================================== -->
 
-        <div class="analysis-image-container">
+    <div class="analysis-preview-section">
 
-            <img
-                id="analysis-image"
-                alt="Coffee sample being analyzed">
+        <div class="analysis-preview-header">
 
-            <span class="analysis-image-label">
-                SAMPLE ANALYSIS
-            </span>
+            <div>
+                <span class="small-label">
+                    CAPTURED SAMPLE VIEWS
+                </span>
+
+                <p>
+                    Both captured sides are processed together
+                    during quality assessment.
+                </p>
+            </div>
 
         </div>
 
 
+        <div class="analysis-preview-grid">
+
+            <!-- SIDE A -->
+
+            <div class="analysis-preview-card">
+
+                <div class="analysis-image-container">
+
+                    <img
+                        id="analysis-side-a"
+                        alt="Captured Side A of coffee sample">
+
+                    <span class="analysis-image-label">
+                        SIDE A
+                    </span>
+
+                </div>
+
+                <div class="analysis-preview-caption">
+
+                    <strong>Side A</strong>
+
+                    <span>
+                        First captured view
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- SIDE B -->
+
+            <div class="analysis-preview-card">
+
+                <div class="analysis-image-container">
+
+                    <img
+                        id="analysis-side-b"
+                        alt="Captured Side B of coffee sample">
+
+                    <span class="analysis-image-label">
+                        SIDE B
+                    </span>
+
+                </div>
+
+                <div class="analysis-preview-caption">
+
+                    <strong>Side B</strong>
+
+                    <span>
+                        Reoriented sample view
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+        <!-- =========================================
+            ANALYSIS PROGRESS
+        ========================================== -->
+
         <div class="analysis-details">
 
-            <span class="small-label">
-                ANALYSIS PROGRESS
-            </span>
+            <div class="analysis-progress-header">
+
+                <div>
+
+                    <span class="small-label">
+                        ANALYSIS PROGRESS
+                    </span>
+
+                    <strong>
+                        Processing coffee sample
+                    </strong>
+
+                </div>
 
 
-            <div class="analysis-percentage">
+                <div class="analysis-percentage">
 
-                <span id="analysis-percentage">
-                    0
-                </span>%
+                    <span id="analysis-percentage">
+                        0
+                    </span>%
+
+                </div>
 
             </div>
 
@@ -1683,14 +1371,15 @@ $devices = [
 
             <div class="analysis-stages">
 
-
                 <div
                     class="analysis-stage"
                     data-stage="0">
 
                     <span class="stage-dot"></span>
 
-                    Validate both captured sides
+                    <span>
+                        Validate both captured sides
+                    </span>
 
                 </div>
 
@@ -1701,7 +1390,9 @@ $devices = [
 
                     <span class="stage-dot"></span>
 
-                    Image preprocessing
+                    <span>
+                        Image preprocessing
+                    </span>
 
                 </div>
 
@@ -1712,7 +1403,9 @@ $devices = [
 
                     <span class="stage-dot"></span>
 
-                    Coffee bean detection
+                    <span>
+                        Coffee bean detection
+                    </span>
 
                 </div>
 
@@ -1723,7 +1416,9 @@ $devices = [
 
                     <span class="stage-dot"></span>
 
-                    Defect identification
+                    <span>
+                        Defect identification
+                    </span>
 
                 </div>
 
@@ -1734,7 +1429,9 @@ $devices = [
 
                     <span class="stage-dot"></span>
 
-                    Quality classification
+                    <span>
+                        Quality classification
+                    </span>
 
                 </div>
 
@@ -1745,7 +1442,9 @@ $devices = [
 
                     <span class="stage-dot"></span>
 
-                    Pricing computation
+                    <span>
+                        Pricing computation
+                    </span>
 
                 </div>
 
@@ -2270,33 +1969,24 @@ $devices = [
         class="btn-secondary"
         id="wizard-back-btn"
         hidden>
-
         Back
-
     </button>
 
-
     <div class="footer-spacer"></div>
-
 
     <button
         type="button"
         class="btn-secondary"
         id="wizard-cancel-btn">
-
         Cancel
-
     </button>
-
 
     <button
         type="button"
         class="btn-primary"
         id="wizard-next-btn"
         disabled>
-
         Continue
-
     </button>
 
 </div>
@@ -2306,8 +1996,8 @@ $devices = [
 
 </div>
 
-<script src="script/dashboard-script.js"></script>
-<script src="script/transaction-modal.js"></script>
+<script src="script/dashboard-script.js?v=20261001-2"></script>
+<script src="script/transaction-modal.js?v=20261001-2"></script>
 
 </body>
 

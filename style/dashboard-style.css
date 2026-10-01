@@ -995,36 +995,105 @@ main {
     color: #9DDB8E;
 }
 
+/* =========================================================
+   SIDE A / SIDE B NAVIGATION
+   Directly attached below camera viewport
+========================================================= */
+
 .side-selector {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 14px;
-    padding: 14px 14px 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid #D8C7B4;
+    background: #F3E9DC;
 }
+
 
 .side-selector button {
-    flex: 1;
-    padding: 11px 14px;
-    border: 1px solid #D8C7B4;
-    border-radius: 10px;
-    background: #FFFAF4;
+    min-width: 0;
+    min-height: 62px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 4px;
+    padding: 10px 14px;
+
+    border: none;
+    border-right: 1px solid #D8C7B4;
+    border-radius: 0;
+
+    background: #F8F1E8;
     color: var(--muted);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+
     cursor: pointer;
-    transition: 0.18s;
+
+    transition:
+        background 0.18s ease,
+        color 0.18s ease,
+        box-shadow 0.18s ease;
 }
+
+
+.side-selector button:last-child {
+    border-right: none;
+}
+
 
 .side-selector button:hover {
-    border-color: var(--gold);
-    color: var(--bean);
+    background: #F1E5D6;
 }
 
+
 .side-selector button.active {
-    border-color: var(--bean);
+    position: relative;
+
     background: var(--bean);
-    color: white;
+    color: var(--cream-2);
+}
+
+
+.side-selector button.active::after {
+    content: "";
+
+    position: absolute;
+    left: 18%;
+    right: 18%;
+    bottom: 0;
+
+    height: 3px;
+
+    background: var(--gold);
+}
+
+
+.side-selector-name {
+    display: block;
+
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+}
+
+
+.side-selector-state {
+    display: block;
+
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0;
+
+    opacity: 0.75;
+}
+
+
+.side-selector button.active .side-selector-state {
+    color: #E7D2AC;
+    opacity: 1;
 }
 
 .camera-viewport {
@@ -1115,61 +1184,99 @@ main {
     font-weight: 600;
 }
 
+/* =========================================================
+   CAMERA ACTION BUTTONS
+========================================================= */
+
 .camera-toolbar {
     display: flex;
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
+
     gap: 10px;
-    margin-top: 14px;
-    padding: 0 14px;
+
+    padding: 0 18px;
+    margin: 0;
 }
 
-.camera-message {
-    min-height: 24px;
-    margin: 12px 0 0;
-    padding: 0 14px;
-    color: var(--muted);
-    text-align: center;
-    font-size: 11px;
-    line-height: 1.5;
+
+.camera-toolbar button {
+    min-width: 145px;
 }
+
+
+/* Make capture action more prominent */
+
+#capture-btn {
+    min-width: 180px;
+}
+
+
+/* Retake occupies the same visual position as capture */
+
+#retake-btn {
+    min-width: 180px;
+}
+
+/* =========================================================
+   CAMERA MESSAGE
+========================================================= */
+
+.camera-message {
+    margin: 16px 18px 10px;
+
+    color: var(--muted);
+
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+/* =========================================================
+   SIDE CAPTURE STATUS
+========================================================= */
 
 .side-capture-status {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+
     gap: 10px;
-    margin-top: 18px;
-    padding: 0 14px;
+
+    margin: 16px 18px 0;
 }
+
 
 .side-status-card {
-    padding: 14px;
-    border: 1px solid #DED1C2;
-    border-radius: 11px;
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding: 11px 13px;
+
+    border: 1px solid #E0D3C4;
+    border-radius: 9px;
+
     background: #FFFAF4;
-}
 
-.side-status-card strong {
-    display: block;
-    margin-bottom: 4px;
-    color: var(--bean);
-    font-size: 12px;
-}
-
-.side-status-card span {
-    color: var(--muted);
     font-size: 11px;
 }
 
-.side-status-card.captured {
-    border-color: #819A75;
-    background: #F2F7EF;
+
+.side-status-card strong {
+    color: var(--bean);
+    font-size: 11px;
 }
 
-.side-status-card.captured strong,
-.side-status-card.captured span {
-    color: #54734D;
+
+.side-status-card span {
+    color: var(--muted);
+    font-size: 10px;
+    text-align: right;
 }
 
 .weighing-panel {

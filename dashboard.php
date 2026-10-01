@@ -886,7 +886,6 @@ $devices = [
 
 </div>
 
-
 <!-- =========================================================
      STEP 3 — CAPTURE
 ========================================================= -->
@@ -919,7 +918,9 @@ $devices = [
     <div class="capture-layout">
 
 
-        <!-- CAMERA -->
+        <!-- =================================================
+             CAMERA
+        ================================================== -->
 
         <div class="camera-panel">
 
@@ -940,28 +941,7 @@ $devices = [
             </div>
 
 
-            <div class="side-selector">
-
-                <button
-                    type="button"
-                    class="active"
-                    data-capture-side="A">
-
-                    SIDE A
-
-                </button>
-
-
-                <button
-                    type="button"
-                    data-capture-side="B">
-
-                    SIDE B
-
-                </button>
-
-            </div>
-
+            <!-- CAMERA VIEW -->
 
             <div class="camera-viewport">
 
@@ -1006,13 +986,65 @@ $devices = [
 
 
                 <div class="camera-guides">
-
                     <div class="camera-guide-frame"></div>
-
                 </div>
 
             </div>
 
+
+            <!-- =============================================
+                 SIDE NAVIGATION
+                 Placed directly below the camera
+            ============================================== -->
+
+            <div class="side-selector">
+
+                <button
+                    type="button"
+                    class="active"
+                    data-capture-side="A">
+
+                    <span class="side-selector-name">
+                        SIDE A
+                    </span>
+
+                    <span class="side-selector-state">
+                        Active
+                    </span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    data-capture-side="B">
+
+                    <span class="side-selector-name">
+                        SIDE B
+                    </span>
+
+                    <span class="side-selector-state">
+                        Not captured
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <!-- CAMERA MESSAGE -->
+
+            <p
+                class="camera-message"
+                id="camera-message"
+                role="status">
+
+                Start the camera to capture Side A.
+
+            </p>
+
+
+            <!-- CAMERA ACTIONS -->
 
             <div class="camera-toolbar">
 
@@ -1050,18 +1082,9 @@ $devices = [
             </div>
 
 
-            <p
-                class="camera-message"
-                id="camera-message"
-                role="status">
-
-                Start the camera to capture Side A.
-
-            </p>
-
+            <!-- SIDE CAPTURE STATUS -->
 
             <div class="side-capture-status">
-
 
                 <div
                     class="side-status-card"
@@ -1097,7 +1120,9 @@ $devices = [
         </div>
 
 
-        <!-- CAPTURE INFORMATION -->
+        <!-- =================================================
+             CAPTURE INFORMATION
+        ================================================== -->
 
         <div class="weighing-panel">
 

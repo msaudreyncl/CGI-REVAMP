@@ -568,7 +568,7 @@
         if (
             state.previousFocus &&
             typeof state.previousFocus.focus ===
-                'function'
+            'function'
         ) {
             state.previousFocus.focus();
         }
@@ -1041,7 +1041,7 @@
                 state.sampleWeight
             ) &&
             state.sampleWeight >=
-                REQUIRED_WEIGHT
+            REQUIRED_WEIGHT
         );
     }
 
@@ -2646,175 +2646,132 @@
     }
 
 
-    // =========================================================
-    // PRINT RECEIPT
-    // =========================================================
+    
+// =========================================================
+// PRINT RECEIPT
+// =========================================================
 
-    function printReceipt() {
-        if (!state.transaction) {
-            return;
-        }
+function printReceipt() {
+    const receipt =
+        $('receipt-paper');
 
-
-        const receipt =
-            $('receipt-paper');
-
-
-        if (!receipt) {
-            showNotice(
-                'receipt-notice',
-                'Receipt content could not be found.',
-                true
-            );
-
-            return;
-        }
-
-
-        const printWindow =
-            window.open(
-                '',
-                'CGIReceipt',
-                'width=480,height=720'
-            );
-
-
-        if (!printWindow) {
-            showNotice(
-                'receipt-notice',
-                'The print window was blocked. Allow pop-ups for this page and try again.',
-                true
-            );
-
-            return;
-        }
-
-
-        const receiptHTML =
-            receipt.outerHTML;
-
-
-        printWindow.document.open();
-
-
-        printWindow.document.write(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-
-<meta charset="UTF-8">
-
-<title>CGI Transaction Receipt</title>
-
-<style>
-
-    @page {
-        margin: 4mm;
-    }
-
-    * {
-        box-sizing: border-box;
-    }
-
-    html,
-    body {
-        margin: 0;
-        padding: 0;
-        background: #ffffff;
-        color: #000000;
-        font-family:
-            "Courier New",
-            Courier,
-            monospace;
-    }
-
-    body {
-        width: 80mm;
-        margin: 0 auto;
-        padding: 4mm;
-        font-size: 12px;
-        line-height: 1.4;
-    }
-
-    #receipt-paper {
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        background: #ffffff;
-        color: #000000;
-        box-shadow: none;
-        border: none;
-    }
-
-    #receipt-paper * {
-        color: #000000 !important;
-        background: transparent !important;
-        box-shadow: none !important;
-    }
-
-    h1,
-    h2,
-    h3,
-    p {
-        margin-top: 0;
-    }
-
-    img {
-        max-width: 100%;
-    }
-
-    button {
-        display: none !important;
-    }
-
-</style>
-
-</head>
-
-<body>
-
-${receiptHTML}
-
-</body>
-</html>
-        `);
-
-
-        printWindow.document.close();
-
-
+    if (!receipt) {
         showNotice(
             'receipt-notice',
-            'Receipt prepared for printing.'
+            'Receipt content could not be found.',
+            true
         );
 
-
-        setTimeout(
-            () => {
-                printWindow.focus();
-                printWindow.print();
-            },
-            300
-        );
-
-
-        printWindow.onafterprint =
-            () => {
-                printWindow.close();
-            };
+        return;
     }
 
 
-    const printReceiptBtn =
-        $('print-receipt-btn');
-
-    if (printReceiptBtn) {
-        printReceiptBtn.addEventListener(
-            'click',
-            printReceipt
+    if (!state.transaction) {
+        showNotice(
+            'receipt-notice',
+            'No completed transaction is available to print.',
+            true
         );
+
+        return;
     }
 
+
+    /*
+     * Make sure the latest transaction data
+     * is displayed before printing.
+     */
+    renderReceipt();
+
+
+    /*
+     * Add a temporary class to the body.
+     *
+     * dashboard-style.css will use this class
+     * inside @media print to hide everything
+     * except #receipt-paper.
+     */
+    document.body.classList.add(
+        'printing-receipt'
+    );
+
+
+    showNotice(
+        'receipt-notice',
+        'Preparing receipt for printing.'
+    );
+
+
+    /*
+     * Wait for the browser to apply the
+     * print-specific layout before opening
+     * the print dialog.
+     */
+    requestAnimationFrame(() => {
+
+        requestAnimationFrame(() => {
+
+            window.print();
+
+        });
+
+    });
+}
+
+
+// =========================================================
+// AFTER PRINT
+// =========================================================
+
+window.addEventListener(
+    'afterprint',
+    () => {
+
+        /*
+         * Restore the normal dashboard layout
+         * after printing or cancelling print.
+         */
+        document.body.classList.remove(
+            'printing-receipt'
+        );
+
+
+        if (
+            !modal.hidden &&
+            state.currentStep === 6
+        ) {
+            showNotice(
+                'receipt-notice',
+                'Receipt ready.'
+            );
+        }
+
+    }
+);
+
+
+// =========================================================
+// PRINT RECEIPT BUTTON
+// =========================================================
+
+const printReceiptBtn =
+    $('print-receipt-btn');
+
+
+if (printReceiptBtn) {
+
+    printReceiptBtn.addEventListener(
+        'click',
+        (event) => {
+
+            event.preventDefault();
+
+            printReceipt();
+
+        }
+    );
+
+}
 
     // =========================================================
     // NAVIGATION VALIDATION

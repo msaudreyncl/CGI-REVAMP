@@ -69,7 +69,7 @@ $devices = [
     <nav class="main-nav" aria-label="Main navigation">
         <a href="history.php">History</a>
         <a href="dashboard.php" class="active" aria-current="page">Dashboard</a>
-        <a href="settings.php">Settings</a>
+        <a href="configuration.php">Configuration</a>
     </nav>
 
     <div class="user-menu">

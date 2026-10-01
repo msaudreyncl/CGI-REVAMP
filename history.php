@@ -152,7 +152,7 @@ function gradeClass($grade) {
     <nav class="main-nav" aria-label="Main navigation">
         <a href="history.php" class="active" aria-current="page">History</a>
         <a href="dashboard.php">Dashboard</a>
-        <a href="settings.php">Settings</a>
+        <a href="configuration.php">Configuration</a>
     </nav>
 
     <div class="user-menu">

@@ -513,16 +513,13 @@
     // =========================================================
 
     async function open() {
-        state.previousFocus =
-            document.activeElement;
+        state.previousFocus = document.activeElement;
 
         resetWizard();
 
         modal.hidden = false;
 
-        document.body.classList.add(
-            'modal-open'
-        );
+        document.body.classList.add('modal-open');
 
         showStep(1);
 
@@ -531,6 +528,12 @@
         if (closeBtn) {
             closeBtn.focus();
         }
+    }
+
+    const startBtn = $('start-btn');
+
+    if (startBtn) {
+        startBtn.addEventListener('click', open);
     }
 
 
@@ -2646,132 +2649,132 @@
     }
 
 
-    
-// =========================================================
-// PRINT RECEIPT
-// =========================================================
 
-function printReceipt() {
-    const receipt =
-        $('receipt-paper');
+    // =========================================================
+    // PRINT RECEIPT
+    // =========================================================
 
-    if (!receipt) {
-        showNotice(
-            'receipt-notice',
-            'Receipt content could not be found.',
-            true
-        );
+    function printReceipt() {
+        const receipt =
+            $('receipt-paper');
 
-        return;
-    }
+        if (!receipt) {
+            showNotice(
+                'receipt-notice',
+                'Receipt content could not be found.',
+                true
+            );
 
-
-    if (!state.transaction) {
-        showNotice(
-            'receipt-notice',
-            'No completed transaction is available to print.',
-            true
-        );
-
-        return;
-    }
+            return;
+        }
 
 
-    /*
-     * Make sure the latest transaction data
-     * is displayed before printing.
-     */
-    renderReceipt();
+        if (!state.transaction) {
+            showNotice(
+                'receipt-notice',
+                'No completed transaction is available to print.',
+                true
+            );
 
+            return;
+        }
 
-    /*
-     * Add a temporary class to the body.
-     *
-     * dashboard-style.css will use this class
-     * inside @media print to hide everything
-     * except #receipt-paper.
-     */
-    document.body.classList.add(
-        'printing-receipt'
-    );
-
-
-    showNotice(
-        'receipt-notice',
-        'Preparing receipt for printing.'
-    );
-
-
-    /*
-     * Wait for the browser to apply the
-     * print-specific layout before opening
-     * the print dialog.
-     */
-    requestAnimationFrame(() => {
-
-        requestAnimationFrame(() => {
-
-            window.print();
-
-        });
-
-    });
-}
-
-
-// =========================================================
-// AFTER PRINT
-// =========================================================
-
-window.addEventListener(
-    'afterprint',
-    () => {
 
         /*
-         * Restore the normal dashboard layout
-         * after printing or cancelling print.
+         * Make sure the latest transaction data
+         * is displayed before printing.
          */
-        document.body.classList.remove(
+        renderReceipt();
+
+
+        /*
+         * Add a temporary class to the body.
+         *
+         * dashboard-style.css will use this class
+         * inside @media print to hide everything
+         * except #receipt-paper.
+         */
+        document.body.classList.add(
             'printing-receipt'
         );
 
 
-        if (
-            !modal.hidden &&
-            state.currentStep === 6
-        ) {
-            showNotice(
-                'receipt-notice',
-                'Receipt ready.'
-            );
-        }
+        showNotice(
+            'receipt-notice',
+            'Preparing receipt for printing.'
+        );
 
+
+        /*
+         * Wait for the browser to apply the
+         * print-specific layout before opening
+         * the print dialog.
+         */
+        requestAnimationFrame(() => {
+
+            requestAnimationFrame(() => {
+
+                window.print();
+
+            });
+
+        });
     }
-);
 
 
-// =========================================================
-// PRINT RECEIPT BUTTON
-// =========================================================
+    // =========================================================
+    // AFTER PRINT
+    // =========================================================
 
-const printReceiptBtn =
-    $('print-receipt-btn');
+    window.addEventListener(
+        'afterprint',
+        () => {
+
+            /*
+             * Restore the normal dashboard layout
+             * after printing or cancelling print.
+             */
+            document.body.classList.remove(
+                'printing-receipt'
+            );
 
 
-if (printReceiptBtn) {
-
-    printReceiptBtn.addEventListener(
-        'click',
-        (event) => {
-
-            event.preventDefault();
-
-            printReceipt();
+            if (
+                !modal.hidden &&
+                state.currentStep === 6
+            ) {
+                showNotice(
+                    'receipt-notice',
+                    'Receipt ready.'
+                );
+            }
 
         }
     );
 
-}
+
+    // =========================================================
+    // PRINT RECEIPT BUTTON
+    // =========================================================
+
+    const printReceiptBtn =
+        $('print-receipt-btn');
+
+
+    if (printReceiptBtn) {
+
+        printReceiptBtn.addEventListener(
+            'click',
+            (event) => {
+
+                event.preventDefault();
+
+                printReceipt();
+
+            }
+        );
+
+    }
 
     // =========================================================
     // NAVIGATION VALIDATION

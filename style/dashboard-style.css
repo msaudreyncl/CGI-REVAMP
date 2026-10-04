@@ -885,9 +885,17 @@ main {
 .small-label {
     display: block;
     color: var(--gold);
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: .11em;
+}
+
+.step-eyebrow {
+    width: fit-content;
+    padding: 4px 7px;
+    border: 1px solid rgba(184, 134, 59, .14);
+    border-radius: 999px;
+    background: rgba(184, 134, 59, .06);
 }
 
 .step-heading h3 {
@@ -964,6 +972,10 @@ main {
     line-height: 1.7;
 }
 
+/* =========================================================
+   STEP 1 — HARDWARE READINESS
+========================================================= */
+
 .hardware-check-list {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -971,74 +983,331 @@ main {
 }
 
 .hardware-check {
-    padding: 15px;
-    border: 1px solid var(--line);
+    position: relative;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    align-items: center;
+    gap: 11px;
+    padding: 14px;
+    border: 1px solid #E2D7C9;
+    border-radius: 12px;
+    background: #FCF9F5;
+    transition:
+        border-color .2s ease,
+        background .2s ease,
+        box-shadow .2s ease,
+        transform .2s ease;
+}
+
+.hardware-check.ready {
+    border-color: rgba(110, 139, 106, .28);
+    background:
+        linear-gradient(
+            135deg,
+            rgba(231, 238, 223, .62),
+            rgba(255, 253, 249, .94)
+        );
+}
+
+.hardware-check.warning {
+    border-color: rgba(184, 121, 31, .28);
+    background: #FFF9EF;
+}
+
+.hardware-check.error {
+    border-color: rgba(164, 67, 47, .25);
+    background: #FFF7F4;
+}
+
+.hardware-check.checking {
+    border-color: rgba(184, 134, 59, .24);
+    background: #FBF6EE;
+}
+
+.hardware-check-icon {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    grid-row: 1 / span 2;
+    border: 1px solid rgba(58, 36, 24, .08);
     border-radius: 10px;
-    background: #FAF7F2;
+    background: rgba(255, 253, 249, .85);
+}
+
+.hardware-check-icon img {
+    width: 21px;
+    height: 21px;
+    object-fit: contain;
+}
+
+.hardware-check-info {
+    min-width: 0;
 }
 
 .hardware-check-name {
     display: block;
-    margin-bottom: 8px;
-    font-size: 12px;
-    font-weight: 600;
+    margin: 0 0 3px;
+    color: var(--bean);
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+.hardware-check-detail {
+    display: block;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 9px;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .hardware-check-status {
+    grid-column: 1 / -1;
+    width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: rgba(58, 36, 24, .055);
     color: var(--muted);
-    font-size: 11px;
+    font-size: 9.5px;
+    font-weight: 700;
+}
+
+.hardware-status-dot {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: #A99B8F;
 }
 
 .hardware-check.ready .hardware-check-status {
-    color: var(--sage);
+    background: rgba(110, 139, 106, .11);
+    color: #557150;
+}
+
+.hardware-check.ready .hardware-status-dot {
+    background: var(--sage);
+    box-shadow: 0 0 0 3px rgba(110, 139, 106, .1);
 }
 
 .hardware-check.warning .hardware-check-status {
+    background: rgba(184, 121, 31, .1);
     color: var(--warning);
 }
 
+.hardware-check.warning .hardware-status-dot {
+    background: var(--warning);
+}
+
 .hardware-check.error .hardware-check-status {
+    background: rgba(164, 67, 47, .09);
     color: var(--danger);
 }
 
-.text-action {
-    padding: 10px 0;
-    border: none;
-    background: none;
-    color: var(--bean);
-    text-decoration: underline;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
+.hardware-check.error .hardware-status-dot {
+    background: var(--danger);
 }
+
+.hardware-check.checking .hardware-check-status {
+    color: var(--gold);
+}
+
+.hardware-check.checking .hardware-status-dot {
+    background: var(--gold);
+    animation: hardware-pulse 1s ease-in-out infinite;
+}
+
+@keyframes hardware-pulse {
+    0%, 100% {
+        opacity: .4;
+        transform: scale(.85);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* =========================================================
+   REFRESH DEVICES
+========================================================= */
+
+.refresh-devices-btn {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 10px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--bean);
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        background .18s ease,
+        color .18s ease;
+}
+
+.refresh-devices-btn:hover {
+    background: rgba(184, 134, 59, .08);
+    color: var(--gold);
+}
+
+.refresh-devices-btn:disabled {
+    opacity: 1;
+    cursor: wait;
+}
+
+.refresh-icon {
+    width: 15px;
+    height: 15px;
+    display: grid;
+    place-items: center;
+}
+
+.refresh-icon svg {
+    width: 15px;
+    height: 15px;
+    fill: currentColor;
+}
+
+.refresh-spinner {
+    width: 14px;
+    height: 14px;
+    display: none;
+    flex: 0 0 auto;
+    border: 2px solid rgba(184, 134, 59, .22);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: refresh-spin .7s linear infinite;
+}
+
+.refresh-devices-btn.loading .refresh-icon {
+    display: none;
+}
+
+.refresh-devices-btn.loading .refresh-spinner {
+    display: block;
+}
+
+@keyframes refresh-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* =========================================================
+   PREPARATION CHECKLIST
+========================================================= */
 
 .checklist {
     display: grid;
-    gap: 10px;
+    gap: 9px;
 }
 
 .checklist-item {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 13px 15px;
-    border: 1px solid var(--line);
-    border-radius: 9px;
-    font-size: 12px;
-    line-height: 1.5;
+    min-height: 58px;
+    padding: 11px 13px;
+    border: 1px solid #E2D7C9;
+    border-radius: 11px;
+    background: rgba(255, 253, 249, .76);
     cursor: pointer;
+    transition:
+        border-color .18s ease,
+        background .18s ease,
+        transform .18s ease,
+        box-shadow .18s ease;
+}
+
+.checklist-item:hover {
+    border-color: rgba(184, 134, 59, .32);
+    background: #FFFDF9;
 }
 
 .checklist-item:has(input:checked) {
-    border-color: #B7CBAE;
-    background: var(--sage-bg);
+    border-color: rgba(110, 139, 106, .35);
+    background:
+        linear-gradient(
+            90deg,
+            rgba(231, 238, 223, .78),
+            rgba(255, 253, 249, .92)
+        );
 }
 
 .checklist-item input {
-    width: 17px;
-    height: 17px;
-    flex-shrink: 0;
-    accent-color: var(--sage);
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.checklist-control {
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 1.5px solid #CDBEAE;
+    border-radius: 6px;
+    background: #FFF;
+    color: transparent;
+    transition:
+        border-color .18s ease,
+        background .18s ease,
+        color .18s ease,
+        transform .18s ease;
+}
+
+.checklist-control svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+}
+
+.checklist-item:has(input:checked) .checklist-control {
+    border-color: var(--sage);
+    background: var(--sage);
+    color: white;
+    transform: scale(1.03);
+}
+
+.checklist-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.checklist-content strong {
+    color: var(--bean);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.checklist-content small {
+    color: var(--muted);
+    font-size: 9.5px;
+    line-height: 1.45;
+}
+
+.checklist-item:has(input:checked) .checklist-content strong {
+    color: #506B4B;
 }
 
 /* =========================================================
@@ -1328,6 +1597,46 @@ main {
     opacity: 1;
 }
 
+.side-selector button.captured {
+    background: #EDF3E8;
+    color: #557150;
+}
+
+.side-selector button.captured .side-selector-state {
+    color: var(--sage);
+    font-weight: 700;
+    opacity: 1;
+}
+
+.side-selector button.captured::before {
+    content: "✓";
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    width: 17px;
+    height: 17px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--sage);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.side-selector button.captured {
+    position: relative;
+}
+
+.side-selector button.active:not(.captured) {
+    background: var(--bean);
+    color: var(--cream-2);
+}
+
+.side-selector button.active:not(.captured) .side-selector-state {
+    color: #E7D2AC;
+}
+
 .camera-viewport {
     position: relative;
     width: calc(100% - 28px);
@@ -1468,48 +1777,6 @@ main {
 /* =========================================================
    SIDE CAPTURE STATUS
 ========================================================= */
-
-.side-capture-status {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-
-    gap: 10px;
-
-    margin: 16px 18px 0;
-}
-
-
-.side-status-card {
-    min-width: 0;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 10px;
-
-    padding: 11px 13px;
-
-    border: 1px solid #E0D3C4;
-    border-radius: 9px;
-
-    background: #FFFAF4;
-
-    font-size: 11px;
-}
-
-
-.side-status-card strong {
-    color: var(--bean);
-    font-size: 11px;
-}
-
-
-.side-status-card span {
-    color: var(--muted);
-    font-size: 10px;
-    text-align: right;
-}
 
 .weighing-panel {
     padding: 22px;

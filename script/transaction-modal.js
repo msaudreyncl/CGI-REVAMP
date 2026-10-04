@@ -227,19 +227,45 @@
         }
     );
 
-
     async function refreshDevices() {
+        const button = $('refresh-devices-btn');
+        const label = button?.querySelector('.refresh-label');
+        const cards = document.querySelectorAll('[data-check-device]');
+
+        if (button) {
+            button.disabled = true;
+            button.classList.add('loading');
+        }
+
+        if (label) {
+            label.textContent = 'Checking devices...';
+        }
+
+        cards.forEach((card) => {
+            card.classList.remove('ready', 'warning', 'error');
+            card.classList.add('checking');
+
+            const statusText = card.querySelector('.hardware-status-text');
+
+            if (statusText) {
+                statusText.textContent = 'Checking';
+            }
+        });
+
+        /*
+         * Keep the loading state visible briefly so the user
+         * receives clear feedback that the devices are being checked.
+         */
+        const minimumLoadingTime = delay(650);
+
+        let refreshedStatus = null;
+
         if (
             window.CGIHardware &&
             typeof window.CGIHardware.refresh === 'function'
         ) {
             try {
-                const status =
-                    await window.CGIHardware.refresh();
-
-                updateHardwareStatus(status);
-                return;
-
+                refreshedStatus = await window.CGIHardware.refresh();
             } catch (error) {
                 console.warn(
                     '[CGI] Hardware refresh failed.',
@@ -248,25 +274,25 @@
             }
         }
 
+        await minimumLoadingTime;
 
-        updateHardwareStatus({
-            camera: 'READY',
-            weighingScale: 'READY',
-            printer: 'READY'
-        });
-    }
-
-
-    const refreshDevicesBtn =
-        $('refresh-devices-btn');
-
-    if (refreshDevicesBtn) {
-        refreshDevicesBtn.addEventListener(
-            'click',
-            refreshDevices
+        updateHardwareStatus(
+            refreshedStatus || {
+                camera: 'READY',
+                weighingScale: 'READY',
+                printer: 'READY'
+            }
         );
-    }
 
+        if (button) {
+            button.disabled = false;
+            button.classList.remove('loading');
+        }
+
+        if (label) {
+            label.textContent = 'Refresh device status';
+        }
+    }
 
     // =========================================================
     // RESET WIZARD
@@ -306,14 +332,22 @@
         document
             .querySelectorAll('.prep-checkbox')
             .forEach((checkbox) => {
-                checkbox.checked = false;
+                checkbox.addEventListener('change', () => {
+                    if (preparationComplete()) {
+                        showNotice(
+                            'prepare-notice',
+                            'Preparation complete. The sample is ready for weighing.'
+                        );
+                    } else {
+                        showNotice(
+                            'prepare-notice',
+                            'Complete the preparation checklist to continue.'
+                        );
+                    }
+
+                    updateNavigation();
+                });
             });
-
-
-        showNotice(
-            'prepare-notice',
-            'Complete the preparation checklist to continue.'
-        );
 
 
         // -----------------------------------------------------
@@ -1281,27 +1315,41 @@
     // SIDE SELECTOR
     // =========================================================
 
-    function setActiveSideButton(side) {
-        document
-            .querySelectorAll(
-                '[data-capture-side]'
-            )
-            .forEach((button) => {
-                const active =
-                    button.dataset.captureSide ===
-                    side;
+    function setActiveSideButton(side = null) {
+        const bothComplete =
+            Boolean(state.captured.A) &&
+            Boolean(state.captured.B);
 
-                button.classList.toggle(
-                    'active',
-                    active
-                );
+        document
+            .querySelectorAll('[data-capture-side]')
+            .forEach((button) => {
+                const buttonSide = button.dataset.captureSide;
+                const captured = Boolean(state.captured[buttonSide]);
+
+                const active =
+                    !bothComplete &&
+                    buttonSide === side;
+
+                button.classList.toggle('active', active);
+                button.classList.toggle('captured', captured);
 
                 button.setAttribute(
                     'aria-pressed',
-                    active
-                        ? 'true'
-                        : 'false'
+                    active ? 'true' : 'false'
                 );
+
+                const stateLabel =
+                    button.querySelector('.side-selector-state');
+
+                if (stateLabel) {
+                    if (captured) {
+                        stateLabel.textContent = 'Captured ✓';
+                    } else if (active) {
+                        stateLabel.textContent = 'Active';
+                    } else {
+                        stateLabel.textContent = 'Not captured';
+                    }
+                }
             });
     }
 
@@ -1562,22 +1610,6 @@
 
         const sideBComplete =
             Boolean(state.captured.B);
-
-
-        setText(
-            'side-a-status',
-            sideAComplete
-                ? 'Captured'
-                : 'Not captured'
-        );
-
-        setText(
-            'side-b-status',
-            sideBComplete
-                ? 'Captured'
-                : 'Not captured'
-        );
-
 
         setText(
             'side-a-confirmation',

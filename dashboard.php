@@ -450,7 +450,7 @@ $devices = [
                     <div class="step-heading">
 
                         <span class="step-eyebrow">
-                            STEP 01 / 06
+                            STEP 1 OF 6
                         </span>
 
                         <h3>
@@ -505,122 +505,131 @@ $devices = [
 
 
                     <div class="hardware-check-list">
+                        <div class="hardware-check ready" data-check-device="camera">
+                            <div class="hardware-check-icon">
+                                <img src="assets/camera-icon.png" alt="">
+                            </div>
 
-
-                        <div
-                            class="hardware-check"
-                            data-check-device="camera">
-
-                            <span class="hardware-check-name">
-                                Camera
-                            </span>
-
-                            <span class="hardware-check-status">
-                                Ready
-                            </span>
-
-                        </div>
-
-
-                        <div
-                            class="hardware-check"
-                            data-check-device="weighingScale">
-
-                            <span class="hardware-check-name">
-                                Weighing scale
-                            </span>
+                            <div class="hardware-check-info">
+                                <span class="hardware-check-name">Camera</span>
+                                <span class="hardware-check-detail">Image acquisition device</span>
+                            </div>
 
                             <span class="hardware-check-status">
-                                Ready
+                                <span class="hardware-status-dot"></span>
+                                <span class="hardware-status-text">Ready</span>
                             </span>
-
                         </div>
 
+                        <div class="hardware-check ready" data-check-device="weighingScale">
+                            <div class="hardware-check-icon">
+                                <img src="assets/scale-icon.png" alt="">
+                            </div>
 
-                        <div
-                            class="hardware-check"
-                            data-check-device="printer">
-
-                            <span class="hardware-check-name">
-                                Printer
-                            </span>
+                            <div class="hardware-check-info">
+                                <span class="hardware-check-name">Weighing scale</span>
+                                <span class="hardware-check-detail">Sample weight acquisition</span>
+                            </div>
 
                             <span class="hardware-check-status">
-                                Ready
+                                <span class="hardware-status-dot"></span>
+                                <span class="hardware-status-text">Ready</span>
                             </span>
-
                         </div>
 
+                        <div class="hardware-check ready" data-check-device="printer">
+                            <div class="hardware-check-icon">
+                                <img src="assets/printer-icon.png" alt="">
+                            </div>
+
+                            <div class="hardware-check-info">
+                                <span class="hardware-check-name">Printer</span>
+                                <span class="hardware-check-detail">Transaction receipt output</span>
+                            </div>
+
+                            <span class="hardware-check-status">
+                                <span class="hardware-status-dot"></span>
+                                <span class="hardware-status-text">Ready</span>
+                            </span>
+                        </div>
                     </div>
-
 
                     <button
                         type="button"
-                        class="text-action"
+                        class="refresh-devices-btn"
                         id="refresh-devices-btn">
 
-                        Refresh device status
+                        <span class="refresh-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.75 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35Z"/>
+                            </svg>
+                        </span>
 
+                        <span class="refresh-spinner" aria-hidden="true"></span>
+
+                        <span class="refresh-label">
+                            Refresh device status
+                        </span>
                     </button>
 
 
-                    <h4 class="group-heading">
-                        Preparation checklist
-                    </h4>
-
-
                     <div class="checklist">
+                    <label class="checklist-item">
+                        <input
+                            type="checkbox"
+                            class="prep-checkbox">
 
+                        <span class="checklist-control" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="m9 16.2-3.5-3.5L4.1 14.1 9 19 20.3 7.7l-1.4-1.4L9 16.2Z"/>
+                            </svg>
+                        </span>
 
-                        <label class="checklist-item">
+                        <span class="checklist-content">
+                            <strong>Sample tray prepared</strong>
+                            <small>The sample tray is clean and dry.</small>
+                        </span>
+                    </label>
 
-                            <input
-                                type="checkbox"
-                                class="prep-checkbox">
+                    <label class="checklist-item">
+                        <input
+                            type="checkbox"
+                            class="prep-checkbox">
 
-                            <span>
-                                The sample tray is clean and dry.
-                            </span>
+                        <span class="checklist-control" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="m9 16.2-3.5-3.5L4.1 14.1 9 19 20.3 7.7l-1.4-1.4L9 16.2Z"/>
+                            </svg>
+                        </span>
 
-                        </label>
+                        <span class="checklist-content">
+                            <strong>Sample distributed</strong>
+                            <small>
+                                The complete green coffee bean sample is
+                                distributed across the tray.
+                            </small>
+                        </span>
+                    </label>
 
+                    <label class="checklist-item">
+                        <input
+                            type="checkbox"
+                            class="prep-checkbox">
 
-                        <label class="checklist-item">
+                        <span class="checklist-control" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="m9 16.2-3.5-3.5L4.1 14.1 9 19 20.3 7.7l-1.4-1.4L9 16.2Z"/>
+                            </svg>
+                        </span>
 
-                            <input
-                                type="checkbox"
-                                class="prep-checkbox">
-
-                            <span>
-                                The complete green coffee bean sample
-                                is distributed across the tray.
-                            </span>
-
-                        </label>
-
-
-                        <label class="checklist-item">
-
-                            <input
-                                type="checkbox"
-                                class="prep-checkbox">
-
-                            <span>
-                                The sample is ready to be weighed.
-                            </span>
-
-                        </label>
-
-                    </div>
-
-
-                    <p
-                        class="wizard-notice"
-                        id="prepare-notice">
-
-                        Complete the preparation checklist to continue.
-
-                    </p>
+                        <span class="checklist-content">
+                            <strong>Ready for weighing</strong>
+                            <small>
+                                The prepared sample is ready to be weighed.
+                            </small>
+                        </span>
+                    </label>
+                </div>
 
                 </div>
 
@@ -637,7 +646,7 @@ $devices = [
                     <div class="step-heading">
 
                         <span class="step-eyebrow">
-                            STEP 02 / 06
+                            STEP 2 OF 6
                         </span>
 
                         <h3>
@@ -823,7 +832,7 @@ $devices = [
                     <div class="step-heading">
 
                         <span class="step-eyebrow">
-                            STEP 03 / 06
+                            STEP 3 OF 6
                         </span>
 
                         <h3>
@@ -1009,39 +1018,6 @@ $devices = [
 
                             <!-- SIDE CAPTURE STATUS -->
 
-                            <div class="side-capture-status">
-
-                                <div
-                                    class="side-status-card"
-                                    id="side-a-status">
-
-                                    <strong>
-                                        Side A
-                                    </strong>
-
-                                    <span>
-                                        Not captured
-                                    </span>
-
-                                </div>
-
-
-                                <div
-                                    class="side-status-card"
-                                    id="side-b-status">
-
-                                    <strong>
-                                        Side B
-                                    </strong>
-
-                                    <span>
-                                        Not captured
-                                    </span>
-
-                                </div>
-
-                            </div>
-
                         </div>
 
 
@@ -1165,7 +1141,7 @@ $devices = [
                     <div class="step-heading">
 
                         <span class="step-eyebrow">
-                            STEP 04 / 06
+                            STEP 4 OF 6
                         </span>
 
                         <h3>
@@ -1481,7 +1457,7 @@ $devices = [
                     <div class="step-heading">
 
                         <span class="step-eyebrow">
-                            STEP 05 / 06
+                            STEP 5 OF 6
                         </span>
 
                         <h3>
@@ -1693,7 +1669,7 @@ $devices = [
                     <div class="step-heading">
 
                         <span class="step-eyebrow">
-                            STEP 06 / 06
+                            STEP 6 OF 6
                         </span>
 
                         <h3>

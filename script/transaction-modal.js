@@ -82,6 +82,7 @@
     // =========================================================
 
     const STEP_COUNT = 6;
+    const REQUIRED_WEIGHT = 350;
 
     const TITLES = [
         'Prepare Sample',
@@ -100,20 +101,6 @@
         'Review the grading and suggested pricing results.',
         'Review, print, and complete the transaction.'
     ];
-
-
-    // =========================================================
-    // SYSTEM CONFIGURATION
-    // =========================================================
-
-    const REQUIRED_WEIGHT = 350;
-
-    const DEFAULT_PRICES = {
-        'EXTRA CLASS': 220,
-        'CLASS I': 190,
-        'CLASS II': 160
-    };
-
 
     // =========================================================
     // STATE
@@ -325,30 +312,54 @@
         state.transaction = null;
 
 
-        // -----------------------------------------------------
-        // PREPARATION
-        // -----------------------------------------------------
+    // -----------------------------------------------------
+    // PREPARATION
+    // -----------------------------------------------------
 
-        document
-            .querySelectorAll('.prep-checkbox')
-            .forEach((checkbox) => {
-                checkbox.addEventListener('change', () => {
-                    if (preparationComplete()) {
-                        showNotice(
-                            'prepare-notice',
-                            'Preparation complete. The sample is ready for weighing.'
-                        );
-                    } else {
-                        showNotice(
-                            'prepare-notice',
-                            'Complete the preparation checklist to continue.'
-                        );
-                    }
+    function updatePreparationChecklistCount() {
+        const checkboxes = document.querySelectorAll('.prep-checkbox');
+        const completed = [...checkboxes].filter(
+            checkbox => checkbox.checked
+        ).length;
 
-                    updateNavigation();
-                });
+        const completedCount = document.getElementById('checklist-completed');
+        const checklistCount = document.querySelector('.checklist-count');
+
+        if (completedCount) {
+            completedCount.textContent = completed;
+        }
+
+        if (checklistCount) {
+            checklistCount.classList.toggle(
+                'complete',
+                completed === checkboxes.length
+            );
+        }
+    }
+
+    document
+        .querySelectorAll('.prep-checkbox')
+        .forEach((checkbox) => {
+            checkbox.addEventListener('change', () => {
+                updatePreparationChecklistCount();
+
+                if (preparationComplete()) {
+                    showNotice(
+                        'prepare-notice',
+                        'Preparation complete. The sample is ready for weighing.'
+                    );
+                } else {
+                    showNotice(
+                        'prepare-notice',
+                        'Complete the preparation checklist to continue.'
+                    );
+                }
+
+                updateNavigation();
             });
+        });
 
+    updatePreparationChecklistCount();
 
         // -----------------------------------------------------
         // WEIGHT
@@ -552,10 +563,17 @@
         resetWizard();
 
         modal.hidden = false;
-
         document.body.classList.add('modal-open');
 
         showStep(1);
+
+        requestAnimationFrame(() => {
+            const modalBody = modal.querySelector('.modal-body');
+
+            if (modalBody) {
+                modalBody.scrollTop = 0;
+            }
+        });
 
         await refreshDevices();
 
@@ -569,7 +587,6 @@
     if (startBtn) {
         startBtn.addEventListener('click', open);
     }
-
 
     // =========================================================
     // CLOSE MODAL
@@ -2079,63 +2096,6 @@
         );
     }
 
-
-    // =========================================================
-    // CURRENT PROTOTYPE ASSESSMENT RESULT
-    // =========================================================
-
-    function createPrototypeResult() {
-        const grade =
-            'CLASS I';
-
-        const unitPrice =
-            DEFAULT_PRICES[grade];
-
-        const weightKg =
-            state.sampleWeight / 1000;
-
-
-        return {
-            grade,
-
-            confidence: 94.2,
-
-            beanCount: 105,
-
-            defectCount: 7,
-
-            defects: [
-                {
-                    name: 'Partial Black',
-                    count: 3,
-                    points: 1
-                },
-
-                {
-                    name: 'Slight Insect Damage',
-                    count: 2,
-                    points: 0.2
-                },
-
-                {
-                    name: 'Immature',
-                    count: 2,
-                    points: 0.4
-                }
-            ],
-
-            unitPrice,
-
-            totalPrice:
-                Math.round(
-                    unitPrice *
-                    weightKg *
-                    100
-                ) / 100
-        };
-    }
-
-
     // =========================================================
     // REAL ANALYSIS API
     // =========================================================
@@ -2423,37 +2383,74 @@
         );
     }
 
+    // =========================================================
+    // CREATE ANALYSIS RESULT
+    // =========================================================
+
+    function createPrototypeResult() {
+        const defects = [
+            {
+                name: 'Partial Black',
+                count: 3,
+                points: 1
+            },
+            {
+                name: 'Slight Insect Damage',
+                count: 2,
+                points: 0.2
+            },
+            {
+                name: 'Immature',
+                count: 2,
+                points: 0.4
+            }
+        ];
+
+        const defectPoints = defects.reduce(
+            (total, defect) =>
+                total + Number(defect.points || 0),
+            0
+        );
+
+        return {
+            confidence: 94.2,
+            beanCount: 105,
+            defectCount: 7,
+            defectPoints,
+            defects,
+
+            /*
+            * Temporary value until the revised
+            * pricing formula is integrated.
+            */
+            totalPrice: 0
+        };
+    }
 
     // =========================================================
     // STEP 5 — RESULTS
     // =========================================================
 
     function renderResults() {
-        const transaction =
-            state.transaction;
+        const transaction = state.transaction;
 
         if (!transaction) {
             return;
         }
 
-
         setText(
-            'result-grade',
-            transaction.grade
+            'result-defect-points',
+            Number(transaction.defectPoints || 0).toFixed(1)
         );
 
         setText(
             'result-confidence',
-            `${Number(
-                transaction.confidence
-            ).toFixed(1)}%`
+            `${Number(transaction.confidence).toFixed(1)}%`
         );
 
         setText(
             'result-weight',
-            `${Number(
-                transaction.weight
-            ).toFixed(1)} g`
+            `${Number(transaction.weight).toFixed(1)} g`
         );
 
         setText(
@@ -2468,38 +2465,24 @@
 
         setText(
             'result-total-price',
-            Number(
-                transaction.totalPrice
-            ).toFixed(2)
-        );
-
-        setText(
-            'pricing-grade',
-            transaction.grade
-        );
-
-        setText(
-            'result-unit-price',
-            `${money(
-                transaction.unitPrice
-            )} / kg`
+            Number(transaction.totalPrice || 0).toFixed(2)
         );
 
         setText(
             'pricing-weight',
-            `${Number(
-                transaction.weight
-            ).toFixed(1)} g`
+            `${Number(transaction.weight).toFixed(1)} g`
         );
 
+        setText(
+            'pricing-defect-points',
+            Number(transaction.defectPoints || 0).toFixed(1)
+        );
 
-        const disclaimer =
-            $('results-demo-disclaimer');
+        const disclaimer = $('results-demo-disclaimer');
 
         if (disclaimer) {
             disclaimer.hidden = true;
         }
-
 
         renderDefects();
     }

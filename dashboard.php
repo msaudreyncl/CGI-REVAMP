@@ -573,63 +573,80 @@ $devices = [
                     </button>
 
 
+                    <!-- PREPARATION CHECKLIST -->
+                    <div class="checklist-header">
+                        <div>
+                            <h4>Preparation checklist</h4>
+                            <p>
+                                Confirm that the coffee sample is properly prepared
+                                before proceeding to the weighing step.
+                            </p>
+                        </div>
+
+                        <span class="checklist-count">
+                            <span id="checklist-completed">0</span>/3 completed
+                        </span>
+                    </div>
+
                     <div class="checklist">
-                    <label class="checklist-item">
-                        <input
-                            type="checkbox"
-                            class="prep-checkbox">
+                        <label class="checklist-item">
+                            <input
+                                type="checkbox"
+                                class="prep-checkbox">
 
-                        <span class="checklist-control" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <path d="m9 16.2-3.5-3.5L4.1 14.1 9 19 20.3 7.7l-1.4-1.4L9 16.2Z"/>
-                            </svg>
-                        </span>
+                            <span class="checklist-control" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="m9 16.2-3.5-3.5L4.1 14.1 9 19 20.3 7.7l-1.4-1.4L9 16.2Z"/>
+                                </svg>
+                            </span>
 
-                        <span class="checklist-content">
-                            <strong>Sample tray prepared</strong>
-                            <small>The sample tray is clean and dry.</small>
-                        </span>
-                    </label>
+                            <span class="checklist-content">
+                                <strong>Sample tray prepared</strong>
+                                <small>
+                                    The sample tray is clean and dry.
+                                </small>
+                            </span>
+                        </label>
 
-                    <label class="checklist-item">
-                        <input
-                            type="checkbox"
-                            class="prep-checkbox">
+                        <label class="checklist-item">
+                            <input
+                                type="checkbox"
+                                class="prep-checkbox">
 
-                        <span class="checklist-control" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <path d="m9 16.2-3.5-3.5L4.1 14.1 9 19 20.3 7.7l-1.4-1.4L9 16.2Z"/>
-                            </svg>
-                        </span>
+                            <span class="checklist-control" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="m9 16.2-3.5-3.5L4.1 14.1 9 19 20.3 7.7l-1.4-1.4L9 16.2Z"/>
+                                </svg>
+                            </span>
 
-                        <span class="checklist-content">
-                            <strong>Sample distributed</strong>
-                            <small>
-                                The complete green coffee bean sample is
-                                distributed across the tray.
-                            </small>
-                        </span>
-                    </label>
+                            <span class="checklist-content">
+                                <strong>Sample distributed</strong>
+                                <small>
+                                    The complete green coffee bean sample is
+                                    distributed across the tray.
+                                </small>
+                            </span>
+                        </label>
 
-                    <label class="checklist-item">
-                        <input
-                            type="checkbox"
-                            class="prep-checkbox">
+                        <label class="checklist-item">
+                            <input
+                                type="checkbox"
+                                class="prep-checkbox">
 
-                        <span class="checklist-control" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <path d="m9 16.2-3.5-3.5L4.1 14.1 9 19 20.3 7.7l-1.4-1.4L9 16.2Z"/>
-                            </svg>
-                        </span>
+                            <span class="checklist-control" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="m9 16.2-3.5-3.5L4.1 14.1 9 19 20.3 7.7l-1.4-1.4L9 16.2Z"/>
+                                </svg>
+                            </span>
 
-                        <span class="checklist-content">
-                            <strong>Ready for weighing</strong>
-                            <small>
-                                The prepared sample is ready to be weighed.
-                            </small>
-                        </span>
-                    </label>
-                </div>
+                            <span class="checklist-content">
+                                <strong>Ready for weighing</strong>
+                                <small>
+                                    The prepared sample is ready to be weighed.
+                                </small>
+                            </span>
+                        </label>
+                    </div>
 
                 </div>
 
@@ -1150,9 +1167,9 @@ $devices = [
 
                         <p>
                             The two captured views are processed together.
-                            The system detects the beans, identifies defects,
-                            determines the quality grade, and calculates the
-                            suggested transactional price.
+                            The system detects the coffee beans, identifies
+                            defects, calculates defect points, and prepares
+                            the assessment results.
                         </p>
 
                     </div>
@@ -1296,82 +1313,44 @@ $devices = [
 
 
                             <div class="analysis-stages">
-
                                 <div
-                                    class="analysis-stage"
-                                    data-stage="0">
-
+                                    class="analysis-stage" data-stage="0">
                                     <span class="stage-dot"></span>
-
-                                    <span>
-                                        Validate both captured sides
-                                    </span>
-
+                                    <span>Validate both captured sides</span>
                                 </div>
 
 
                                 <div
-                                    class="analysis-stage"
-                                    data-stage="1">
-
+                                    class="analysis-stage" data-stage="1">
                                     <span class="stage-dot"></span>
-
-                                    <span>
-                                        Image preprocessing
-                                    </span>
-
+                                    <span>Image preprocessing</span>
                                 </div>
 
 
                                 <div
-                                    class="analysis-stage"
-                                    data-stage="2">
-
+                                    class="analysis-stage" data-stage="2">
                                     <span class="stage-dot"></span>
-
-                                    <span>
-                                        Coffee bean detection
-                                    </span>
-
+                                    <span>Coffee bean detection</span>
                                 </div>
 
 
                                 <div
-                                    class="analysis-stage"
-                                    data-stage="3">
-
+                                    class="analysis-stage" data-stage="3">
                                     <span class="stage-dot"></span>
+                                    <span>Defect identification</span>
+                                </div>
 
-                                    <span>
-                                        Defect identification
-                                    </span>
 
+                                <div class="analysis-stage" data-stage="4">
+                                    <span class="stage-dot"></span>
+                                    <span>Defect point calculation</span>
                                 </div>
 
 
                                 <div
-                                    class="analysis-stage"
-                                    data-stage="4">
-
+                                    class="analysis-stage" data-stage="5">
                                     <span class="stage-dot"></span>
-
-                                    <span>
-                                        Quality classification
-                                    </span>
-
-                                </div>
-
-
-                                <div
-                                    class="analysis-stage"
-                                    data-stage="5">
-
-                                    <span class="stage-dot"></span>
-
-                                    <span>
-                                        Pricing computation
-                                    </span>
-
+                                    <span>Pricing computation</span>
                                 </div>
 
                             </div>
@@ -1380,57 +1359,42 @@ $devices = [
 
                     </div>
 
+                    <div class="analysis-sample-card">
+                        <div class="analysis-sample-header">
+                            <div>
+                                <span class="small-label">SAMPLE BEING PROCESSED</span>
+                                <p>Verified inputs included in the current analysis.</p>
+                            </div>
 
-                    <div class="preparation-card">
-
-                        <div>
-
-                            <span class="small-label">
-                                SAMPLE BEING PROCESSED
+                            <span class="analysis-sample-status">
+                                <span class="analysis-sample-status-dot"></span>
+                                Ready
                             </span>
-
-                            <div class="sample-info-row">
-
-                                <span>
-                                    Weight
-                                </span>
-
-                                <strong id="analysis-weight">
-                                    —
-                                </strong>
-
-                            </div>
-
-
-                            <div class="sample-info-row">
-
-                                <span>
-                                    Side A
-                                </span>
-
-                                <strong>
-                                    Captured
-                                </strong>
-
-                            </div>
-
-
-                            <div class="sample-info-row">
-
-                                <span>
-                                    Side B
-                                </span>
-
-                                <strong>
-                                    Captured
-                                </strong>
-
-                            </div>
-
                         </div>
 
-                    </div>
+                        <div class="analysis-sample-grid">
+                            <div class="analysis-sample-item">
+                                <span class="analysis-sample-label">Sample weight</span>
+                                <strong id="analysis-weight">—</strong>
+                            </div>
 
+                            <div class="analysis-sample-item">
+                                <span class="analysis-sample-label">Side A</span>
+                                <strong class="analysis-captured-status">
+                                    <span>✓</span>
+                                    Captured
+                                </strong>
+                            </div>
+
+                            <div class="analysis-sample-item">
+                                <span class="analysis-sample-label">Side B</span>
+                                <strong class="analysis-captured-status">
+                                    <span>✓</span>
+                                    Captured
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
 
                     <p
                         class="wizard-notice"
@@ -1444,10 +1408,9 @@ $devices = [
 
                 </div>
 
-
                 <!-- =========================================================
-     STEP 5 — RESULTS
-========================================================= -->
+                    STEP 5 — RESULTS
+                ========================================================= -->
 
                 <div
                     class="wizard-page"
@@ -1455,207 +1418,112 @@ $devices = [
                     hidden>
 
                     <div class="step-heading">
-
                         <span class="step-eyebrow">
                             STEP 5 OF 6
                         </span>
 
                         <h3>
-                            Quality assessment results
+                            Assessment results
                         </h3>
 
                         <p>
-                            Review the quality assessment of the complete
+                            Review the defect assessment of the complete
                             coffee bean sample and the suggested transactional
-                            price based on the configured parameters.
+                            price based on the recorded sample data.
                         </p>
-
                     </div>
 
-
+                    <!-- TOP RESULT CARDS -->
                     <div class="results-layout">
 
-
-                        <!-- GRADE -->
-
+                        <!-- DEFECT ASSESSMENT -->
                         <div class="result-main-card">
-
                             <span class="small-label">
-                                IDENTIFIED COFFEE GRADE
+                                DEFECT ASSESSMENT
                             </span>
 
-
-                            <div
-                                class="grade-badge"
-                                id="result-grade">
-
-                                —
-
+                            <div class="defect-point-result">
+                                <strong id="result-defect-points">—</strong>
+                                <span>total defect points</span>
                             </div>
-
 
                             <div class="result-confidence">
-
-                                Classification confidence:
-
-                                <strong id="result-confidence">
-                                    —
-                                </strong>
-
+                                Detection confidence:
+                                <strong id="result-confidence">—</strong>
                             </div>
-
 
                             <div class="result-divider"></div>
 
-
                             <div class="result-data-row">
-
-                                <span>
-                                    Coffee type
-                                </span>
-
-                                <strong>
-                                    Robusta
-                                </strong>
-
+                                <span>Coffee type</span>
+                                <strong>Robusta</strong>
                             </div>
 
-
                             <div class="result-data-row">
-
-                                <span>
-                                    Sample weight
-                                </span>
-
-                                <strong id="result-weight">
-                                    —
-                                </strong>
-
+                                <span>Sample weight</span>
+                                <strong id="result-weight">—</strong>
                             </div>
 
-
                             <div class="result-data-row">
-
-                                <span>
-                                    Detected beans
-                                </span>
-
-                                <strong id="result-bean-count">
-                                    —
-                                </strong>
-
+                                <span>Detected beans</span>
+                                <strong id="result-bean-count">—</strong>
                             </div>
 
-
                             <div class="result-data-row">
-
-                                <span>
-                                    Detected defects
-                                </span>
-
-                                <strong id="result-defect-count">
-                                    —
-                                </strong>
-
+                                <span>Detected defects</span>
+                                <strong id="result-defect-count">—</strong>
                             </div>
-
                         </div>
 
-
-                        <!-- PRICE -->
-
+                        <!-- SUGGESTED TRANSACTIONAL PRICE -->
                         <div class="pricing-card">
-
                             <span class="small-label">
                                 SUGGESTED TRANSACTIONAL PRICE
                             </span>
 
-
                             <div class="suggested-price">
-
-                                ₱<span id="result-total-price">
-                                    —
-                                </span>
-
+                                ₱<span id="result-total-price">—</span>
                             </div>
 
-
                             <p class="pricing-description">
-                                Calculated from the identified grade,
-                                recorded sample weight, and configured
-                                reference price.
+                                Suggested transaction value based on the
+                                completed defect assessment and recorded
+                                sample weight.
                             </p>
-
 
                             <div class="pricing-divider"></div>
 
-
                             <div class="result-data-row">
-
-                                <span>
-                                    Grade
-                                </span>
-
-                                <strong id="pricing-grade">
-                                    —
-                                </strong>
-
+                                <span>Recorded weight</span>
+                                <strong id="pricing-weight">—</strong>
                             </div>
 
-
                             <div class="result-data-row">
-
-                                <span>
-                                    Reference price
-                                </span>
-
-                                <strong id="result-unit-price">
-                                    —
-                                </strong>
-
+                                <span>Total defect points</span>
+                                <strong id="pricing-defect-points">—</strong>
                             </div>
-
-
-                            <div class="result-data-row">
-
-                                <span>
-                                    Recorded weight
-                                </span>
-
-                                <strong id="pricing-weight">
-                                    —
-                                </strong>
-
-                            </div>
-
 
                             <p class="pricing-disclaimer">
                                 This is a suggested price only.
-                                The final transaction price remains
-                                subject to agreement between the farmer
-                                and buyer.
+                                The final transaction price remains subject
+                                to agreement between the farmer and buyer.
                             </p>
-
                         </div>
 
                     </div>
 
-
+                    <!-- DEFECT ANALYSIS -->
                     <div class="defect-panel">
-
                         <h4>
                             Defect analysis
                         </h4>
 
-
                         <div id="defect-list">
                             No analysis available.
                         </div>
-
                     </div>
 
                 </div>
-
 
                 <!-- =========================================================
      STEP 6 — RECEIPT
@@ -1683,142 +1551,72 @@ $devices = [
 
                     </div>
 
-
                     <div class="receipt-layout">
 
-
                         <!-- RECEIPT -->
-
                         <div
                             class="receipt-paper"
                             id="receipt-paper">
 
                             <div class="receipt-brand">
-
                                 <h3>
                                     COFFEE GRADE
                                     IDENTIFICATION
                                 </h3>
-
-                                <p>
-                                    Quality Assessment Receipt
-                                </p>
-
+                                <p>Quality Assessment Receipt</p>
                             </div>
-
 
                             <div class="receipt-rule"></div>
 
-
                             <div class="receipt-row">
-
-                                <span>
-                                    Transaction ID
-                                </span>
-
-                                <strong id="receipt-id">
-                                    —
-                                </strong>
-
+                                <span>Transaction ID</span>
+                                <strong id="receipt-id">—</strong>
                             </div>
 
 
                             <div class="receipt-row">
-
-                                <span>
-                                    Date
-                                </span>
-
-                                <strong id="receipt-date">
-                                    —
-                                </strong>
-
+                                <span>Date</span>
+                                <strong id="receipt-date">—</strong>
                             </div>
-
 
                             <div class="receipt-row">
-
-                                <span>
-                                    Time
-                                </span>
-
-                                <strong id="receipt-time">
-                                    —
-                                </strong>
-
+                                <span>Time</span>
+                                <strong id="receipt-time">—</strong>
                             </div>
-
 
                             <div class="receipt-rule"></div>
 
-
                             <div class="receipt-row">
-
-                                <span>
-                                    Coffee type
-                                </span>
-
-                                <strong>
-                                    Robusta
-                                </strong>
-
+                                <span>Coffee type</span>
+                                <strong>Robusta</strong>
                             </div>
 
-
                             <div class="receipt-row">
-
-                                <span>
-                                    Quality grade
-                                </span>
-
-                                <strong id="receipt-grade">
-                                    —
-                                </strong>
-
+                                <span>Sample weight</span>
+                                <strong id="receipt-weight">—</strong>
                             </div>
 
-
                             <div class="receipt-row">
-
-                                <span>
-                                    Weight
-                                </span>
-
-                                <strong id="receipt-weight">
-                                    —
-                                </strong>
-
+                                <span>Detected beans</span>
+                                <strong id="receipt-bean-count">—</strong>
                             </div>
 
-
                             <div class="receipt-row">
-
-                                <span>
-                                    Reference price
-                                </span>
-
-                                <strong id="receipt-unit-price">
-                                    —
-                                </strong>
-
+                                <span>Detected defects</span>
+                                <strong id="receipt-defect-count">—</strong>
                             </div>
 
+                            <div class="receipt-row">
+                                <span>Defect points</span>
+                                <strong id="receipt-defect-points">—</strong>
+                            </div>
 
                             <div class="receipt-rule"></div>
-
 
                             <div class="receipt-total">
-
-                                <span>
-                                    SUGGESTED PRICE
-                                </span>
-
-                                <strong id="receipt-total">
-                                    ₱0.00
-                                </strong>
-
+                                <span>SUGGESTED PRICE</span>
+                                <strong id="receipt-total">₱—</strong>
                             </div>
-
 
                             <div class="receipt-rule"></div>
 

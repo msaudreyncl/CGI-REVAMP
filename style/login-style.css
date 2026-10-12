@@ -523,17 +523,6 @@ input:focus-visible {
     margin-bottom: 34px;
 }
 
-.login-number {
-    position: absolute;
-    top: -17px;
-    right: 0;
-    color: rgba(58, 36, 24, .18);
-    font-family: 'Fraunces', serif;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: .1em;
-}
-
 .login-eyebrow {
     display: block;
     margin-bottom: 9px;
@@ -916,27 +905,6 @@ input:focus-visible {
     color: #80907B;
     font-size: 8.5px;
     line-height: 1.4;
-}
-
-/* =========================================================
-   LOGIN META
-========================================================= */
-
-.login-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 29px;
-    color: rgba(58, 36, 24, .32);
-    font-size: 7px;
-    font-weight: 700;
-    letter-spacing: .1em;
-}
-
-.meta-line {
-    height: 1px;
-    flex: 1;
-    background: rgba(58, 36, 24, .1);
 }
 
 /* =========================================================

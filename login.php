@@ -141,8 +141,6 @@ unset($_SESSION['login_error']);
 
                     <div class="login-heading">
 
-                        <div class="login-number">CGI / 01</div>
-
                         <span class="login-eyebrow">
                             SECURE SYSTEM ACCESS
                         </span>
@@ -304,12 +302,6 @@ unset($_SESSION['login_error']);
                             </span>
                         </div>
 
-                    </div>
-
-                    <div class="login-meta">
-                        <span>CGI SYSTEM</span>
-                        <span class="meta-line"></span>
-                        <span>ROBUSTA QUALITY ASSESSMENT</span>
                     </div>
 
                 </div>
